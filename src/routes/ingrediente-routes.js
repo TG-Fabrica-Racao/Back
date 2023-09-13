@@ -9,8 +9,6 @@ router.get('/historico-compras', login.verifyToken, roles.adminRole, ingrediente
 
 router.get('/', login.verifyToken, ingredienteController.getAllIngredientes);
 
-router.get('/:id', login.verifyToken, ingredienteController.getIngredienteById);
-
 router.post('/create', login.verifyToken, ingredienteController.createIngrediente);
 
 router.post('/comprar', login.verifyToken, roles.adminRole, ingredienteController.comprarIngrediente);

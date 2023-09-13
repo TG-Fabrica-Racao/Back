@@ -1,7 +1,7 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "API para gestão de uma fábrica de ração para animais",
+        "title": "Nutri MAX",
         "description": "",
         "version": "1.0.0"
     },
@@ -12,15 +12,47 @@
         }
     ],
     "paths": {
-        "/user": {
+        "/users": {
             "get": {
                 "summary": "Rota responsável por retornar todos os usuários",
-                "tags": ["Usuário"],
+                "tags": ["Usuários"],
                 "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "Filtrar usuários por ID (opcional)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
                     {
                         "name": "nome",
                         "in": "query",
                         "description": "Filtrar usuários por nome (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filtrar usuários por email (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "telefone",
+                        "in": "query",
+                        "description": "Filtrar usuários por telefone (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "cargo",
+                        "in": "query",
+                        "description": "Filtrar usuários por cargo (opcional)",
                         "schema": {
                             "type": "string"
                         }
@@ -36,87 +68,48 @@
                                         "id_usuario": 1,
                                         "nome": "Usuário 1",
                                         "email": "usuario1@email.com",
-                                        "cargo": "Cargo 1"
+                                        "telefone": "(14) 1234 - 5678",
+                                        "status_usuario": "Ativo",
+                                        "cargo": "Administrador"
                                     },
                                     {
                                         "id_usuario": 2,
                                         "nome": "Usuário 2",
                                         "email": "usuario2@email.com",
-                                        "cargo": "Cargo 2"
+                                        "telefone": "(41) 5678 - 1234",
+                                        "status_usuario": "Inativo",
+                                        "cargo": "Funcionário"
                                     }
                                 ]
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Token de autenticação ausente"
-                    },
-                    "403": {
-                        "description": "Token inválido"
-                    },
-                    "500": {
-                        "description": "Erro interno do servidor"
-                    }
-                }
-            }
-        },        
-        "/user/{id}": {
-            "get": {
-                "summary": "Rota responsável por retornar um usuário específico.",
-                "tags": ["Usuário"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operação bem-sucedida",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "id_usuario": 1,
-                                    "nome": "Usuário 1",
-                                    "email": "usuario1@email.com",
-                                    "cargo": "Cargo 1"
-                                }
                             }
                         }
                     },
                     "400": {
                         "description": "Erro nos parâmetros de entrada"
                     },
-                    "401": {
-                        "description": "Token de autenticação ausente"
-                    },
-                    "403": {
-                        "description": "Token inválido"
-                    },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
                 }
             }
-        },        
-        "/user/identify": {
-            "post": {
-                "summary": "Rota responsável por identificar um usuário através do token de autenticação.",
-                "tags": ["Usuário"],
+        },
+        "/users/logs": {
+            "get": {
+                "summary": "Rota responsável por retornar todos os registros do sistema",
+                "tags": ["Usuários"],
                 "responses": {
                     "200": {
                         "description": "Operação bem-sucedida",
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "id_usuario": 123,
-                                    "nome": "Nome do Usuário",
-                                    "email": "usuario@email.com",
-                                    "cargo": "Cargo do Usuário"
+                                    "id": 1,
+                                    "data_registro": "2023-09-13 T03:00:00.000Z",
+                                    "id_usuario": 1,
+                                    "usuario": "Felipe",
+                                    "id_acao": 5,
+                                    "acao": "Cadastrar ração",
+                                    "descricao": "O usuário Felipe cadastrou a ração Ração 4"
                                 }
                             }
                         }
@@ -127,12 +120,38 @@
                 }
             }
         },        
-        "/user/create": {
+        "/users/identify": {
             "post": {
-                "summary": "Rota responsável por cadastrar um novo usuário.",
-                "tags": ["Usuário"],
+                "summary": "Rota responsável por identificar um usuário através do token de autenticação",
+                "tags": ["Usuários"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1,
+                                    "nome": "Usuário 1",
+                                    "email": "usuario1@email.com",
+                                    "telefone": "(14) 1234 - 5678",
+                                    "status_usuario": 1,
+                                    "cargo": "Administrador"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/users/create": {
+            "post": {
+                "summary": "Rota responsável por cadastrar um usuário",
+                "tags": ["Usuários"],
                 "requestBody": {
-                    "description": "Dados para criar um usuário.",
+                    "description": "Dados para criar um usuário",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -148,12 +167,16 @@
                                         "format": "email",
                                         "example": "usuario@example.com"
                                     },
+                                    "telefone": {
+                                        "type": "string",
+                                        "example": "(14) 9999 - 9999"
+                                    },
                                     "cargo": {
                                         "type": "string",
                                         "example": "Administrador/Funcionário"
                                     }
                                 },
-                                "required": ["nome", "email", "cargo"]
+                                "required": ["nome", "email", "telefone", "cargo"]
                             }
                         }
                     }
@@ -164,20 +187,13 @@
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "message": "Usuário cadastrado com sucesso!",
-                                    "link": "http://localhost/user/{id_usuario}"
+                                    "message": "Usuário cadastrado com sucesso"
                                 }
                             }
                         }
                     },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
-                    "401": {
-                        "description": "Token de autenticação ausente"
-                    },
-                    "403": {
-                        "description": "Token inválido"
+                    "409": {
+                        "description": "Este usuário já está cadastrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -185,12 +201,12 @@
                 }
             }
         },        
-        "/user/login": {
+        "/users/login": {
             "post": {
-                "summary": "Rota responsável por efetuar o Login do usuário.",
-                "tags": ["Usuário"],
+                "summary": "Rota responsável por efetuar o Login do usuário",
+                "tags": ["Usuários"],
                 "requestBody": {
-                    "description": "Dados para efetuar login do usuário.",
+                    "description": "Dados para efetuar login do usuário",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -214,22 +230,26 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Operação bem-sucedida",
+                        "description": "Autenticado com sucesso",
                         "content": {
                             "application/json": {
                                 "example": {
                                     "id_usuario": 1,
-                                    "nome": "Nome do Usuário",
-                                    "email": "usuario1@email.com",
-                                    "cargo": "Cargo do Usuário",
-                                    "message": "Autenticação concluída!",
+                                    "nome": "José",
+                                    "email": "jose_garcia@gmail.com",
+                                    "telefone": "(14) 7657 - 5468",	
+                                    "status_usuario": 0,
+                                    "cargo": "Funcionário",
                                     "token": "token"
                                 }
                             }
                         }
                     },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                    "401": {
+                        "description": "Usuário ou senha inválidos"
+                    },
+                    "404":{
+                        "description": "Usuário não encontrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -237,10 +257,10 @@
                 }
             }
         },        
-        "/user/update-password/{id}": {
+        "/users/update-password/{id}": {
             "patch": {
-                "summary": "Rota responsável por atualizar a senha do usuário.",
-                "tags": ["Usuário"],
+                "summary": "Rota responsável por atualizar a senha do usuário",
+                "tags": ["Usuários"],
                 "parameters": [
                     {
                         "name": "id",
@@ -252,23 +272,23 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Dados para atualizar a senha do usuário.",
+                    "description": "Dados para atualizar a senha do usuário",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "senhaAtual": {
+                                    "senha_atual": {
                                         "type": "string",
                                         "example": "senha123"
                                     },
-                                    "senhaNova": {
+                                    "senha_nova": {
                                         "type": "string",
                                         "example": "12345"
                                     }
                                 },
-                                "required": ["senhaAtual", "senhaNova"]
+                                "required": ["senha_atual", "senha_nova"]
                             }
                         }
                     }
@@ -279,19 +299,26 @@
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "message": "Senha alterada com sucesso!"
+                                    "message": "Senha alterada com sucesso"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Erro de validação",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Senha nova não informada ou senha atual não informada"
+                                }
+                            }
+                        }
                     },
                     "401": {
-                        "description": "Token de autenticação ausente"
+                        "description": "Senha atual incorreta"
                     },
-                    "403": {
-                        "description": "Token inválido"
+                    "404": {
+                        "description": "Usuário não encontrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -299,10 +326,10 @@
                 }
             }
         },        
-        "/user/disable/{id}": {
+        "/users/disable/{id}": {
             "patch": {
-                "summary": "Rota responsável por desabilitar um usuário.",
-                "tags": ["Usuário"],
+                "summary": "Rota responsável por desabilitar um usuário",
+                "tags": ["Usuários"],
                 "parameters": [
                     {
                         "name": "id",
@@ -317,25 +344,46 @@
                     "200": {
                         "description": "Usuário desabilitado com sucesso"
                     },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
-                    "401": {
-                        "description": "Token de autenticação ausente"
-                    },
-                    "403": {
-                        "description": "Token inválido"
+                    "404": {
+                        "description": "Usuário não encontrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
                 }
             }
-        },        
-        "/user/delete/{id}": {
+        },      
+        "/users/enable/{id}": {
+            "patch": {
+                "summary": "Rota responsável por ativar um usuário",
+                "tags": ["Usuários"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuário habilitado com sucesso"
+                    },
+                    "404": {
+                        "description": "Usuário não encontrado"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },          
+        "/users/delete/{id}": {
             "delete": {
-                "summary": "Rota responsável por deletar um usuário.",
-                "tags": ["Usuário"],
+                "summary": "Rota responsável por deletar um usuário",
+                "tags": ["Usuários"],
                 "parameters": [
                     {
                         "name": "id",
@@ -365,11 +413,19 @@
                 }
             }
         },        
-        "/ingrediente": {
+        "/ingredientes": {
             "get": {
-                "summary": "Rota responsável por retornar ingredientes de acordo com nome ou grupo. Caso não seja fornecido nenhum dos dois, a rota irá retornar todos os ingredientes.",
-                "tags": ["Ingrediente"],
+                "summary": "Rota responsável por retornar todos os ingredientes ",
+                "tags": ["Ingredientes"],
                 "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "ID do ingrediente para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "nome",
                         "in": "query",
@@ -411,51 +467,17 @@
                     },
                     "400": {
                         "description": "Erro nos parâmetros de entrada"
-                    }
-                }
-            }
-        },        
-        "/ingrediente/{id}": {
-            "get": {
-                "summary": "Rota responsável por retornar um ingrediente específico.",
-                "tags": ["Ingrediente"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operação bem-sucedida",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "id": 1,
-                                    "nome": "Milho",
-                                    "id_grupo": 8,
-                                    "estoque_minimo": 1000
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
                 }
             }
-        },
-        "/ingrediente/historico-compras": {
+        },        
+        "/ingredientes/historico-compras": {
             "get": {
-                "summary": "Rota responsável por retornar o histórico de compras dos ingredientes.",
-                "tags": ["Ingrediente"],
+                "summary": "Rota responsável por retornar o histórico de compras dos ingredientes",
+                "tags": ["Ingredientes"],
                 "responses": {
                     "200": {
                         "description": "Operação bem-sucedida",
@@ -476,21 +498,18 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
                 }
             }
         },
-        "/ingrediente/create": {
+        "/ingredientes/create": {
             "post": {
-                "summary": "Rota responsável por cadastar um novo ingrediente.",
-                "tags": ["Ingrediente"],
+                "summary": "Rota responsável por cadastar um novo ingrediente",
+                "tags": ["Ingredientes"],
                 "requestBody": {
-                    "description": "Dados para criar um ingrediente.",
+                    "description": "Dados para criar um ingrediente",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -517,7 +536,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Ingrediente criado com sucesso",
+                        "description": "Operação bem-sucedida",
                         "content": {
                             "application/json": {
                                 "example": {
@@ -536,12 +555,12 @@
                 }
             }
         },
-        "/ingrediente/comprar": {
+        "/ingredientes/comprar": {
             "post": {
-                "summary": "Rota responsável por realizar a compra de um ingrediente.",
-                "tags": ["Ingrediente"],
+                "summary": "Rota responsável por realizar a compra de um ingrediente",
+                "tags": ["Ingredientes"],
                 "requestBody": {
-                    "description": "Dados para comprar um ingrediente.",
+                    "description": "Dados para comprar um ingrediente",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -585,7 +604,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Compra realizada com sucesso",
+                        "description": "Operação bem-sucedida",
                         "content": {
                             "application/json": {
                                 "example": {
@@ -604,10 +623,10 @@
                 }
             }
         },
-        "/ingrediente/update/{id}": {
+        "/ingredientes/update/{id}": {
             "patch": {
-                "summary": "Rota responsável por atualizar um ingrediente.",
-                "tags": ["Ingrediente"],
+                "summary": "Rota responsável por atualizar um ingrediente",
+                "tags": ["Ingredientes"],
                 "parameters": [
                     {
                         "name": "id",
@@ -619,7 +638,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Dados para atualizar um ingrediente.",
+                    "description": "Dados para atualizar um ingrediente",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -646,17 +665,17 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Ingrediente atualizado com sucesso",
+                        "description": "Operação bem-sucedida",
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "Mensagem": "Ingrediente atualizado com sucesso!"
+                                    "Mensagem": "Ingrediente atualizado com sucesso"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o id da ingrediente"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -664,10 +683,10 @@
                 }
             }
         },
-        "/ingrediente/delete/{id}": {
+        "/ingredientes/delete/{id}": {
             "delete": {
-                "summary": "Rota responsável por deletar um ingrediente.",
-                "tags": ["Ingrediente"],
+                "summary": "Rota responsável por deletar um ingrediente",
+                "tags": ["Ingredientes"],
                 "parameters": [
                     {
                         "name": "id",
@@ -680,17 +699,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Ingrediente deletado com sucesso",
+                        "description": "Operação bem-sucedida",
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "Mensagem": "Ingrediente deletado com sucesso!"
+                                    "Mensagem": "Ingrediente deletado com sucesso"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o id do ingrediente"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -698,11 +717,19 @@
                 }
             }
         },
-        "/racao": {
+        "/racoes": {
             "get": {
-                "summary": "Obter rações com a opção de filtrar por nome, categoria e fase_utilizada.",
-                "tags": ["Ração"],
+                "summary": "Rota responsável por retornar todas as rações",
+                "tags": ["Rações"],
                 "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "ID da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "nome",
                         "in": "query",
@@ -740,6 +767,7 @@
                                         "categoria": "Categoria 1",
                                         "fase_utilizada": "Fase 1",
                                         "tipo_racao": "Produção Própria",
+                                        "batida": 800,
                                         "ingredientes_e_quantidades": "Ingrediente 1 (500Kg), Ingrediente 2 (300Kg)"
                                     },
                                     {
@@ -748,6 +776,7 @@
                                         "categoria": "Categoria 2",
                                         "fase_utilizada": "Fase 2",
                                         "tipo_racao": "Comprada",
+                                        "batida": 1000,
                                         "ingredientes_e_quantidades": "Ingrediente 3 (600Kg), Ingrediente 4 (400Kg)"
                                     }
                                 ]
@@ -763,48 +792,10 @@
                 }
             }
         },        
-        "/racao/{id}": {
+        "/racoes/historico-compras": {
             "get": {
-                "summary": "Obter uma ração por ID",
-                "tags": ["Ração"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operação bem-sucedida",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "id": 1,
-                                    "nome": "Ração 1",
-                                    "tipo_racao": "Produção Própria",
-                                    "categoria": "Categoria 1",
-                                    "fase_utilizada": "Fase 1",
-                                    "batida": 1000                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
-                    "500": {
-                        "description": "Erro interno do servidor"
-                    }
-                }
-            }
-        },
-        "/racao/historico-compras": {
-            "get": {
-                "summary": "Obter o histórico de compras de rações",
-                "tags": ["Ração"],
+                "summary": "Rota responsável por retornar o histórico de compras das rações",
+                "tags": ["Rações"],
                 "responses": {
                     "200": {
                         "description": "Operação bem-sucedida",
@@ -825,21 +816,18 @@
                             }
                         }
                     },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
                 }
             }
         },
-        "/racao/create": {
+        "/racoes/create": {
             "post": {
-                "summary": "Criar uma nova fórmula de ração",
-                "tags": ["Ração"],
+                "summary": "Rota responsável por cadastrar uma ração",
+                "tags": ["Rações"],
                 "requestBody": {
-                    "description": "Dados para criar uma ração.",
+                    "description": "Dados para criar uma ração",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -865,9 +853,36 @@
                                     "batida": {
                                         "type": "number",
                                         "example": 1000
+                                    },
+                                    "ingredientes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id_ingrediente": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "quantidade": {
+                                                    "type": "number",
+                                                    "example": 500
+                                                }
+                                            },
+                                            "required": ["id_ingrediente", "quantidade"]
+                                        },
+                                        "example": [
+                                            {
+                                                "id_ingrediente": 1,
+                                                "quantidade": 500
+                                            },
+                                            {
+                                                "id_ingrediente": 2,
+                                                "quantidade": 500
+                                            }
+                                        ]
                                     }
                                 },
-                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida"]
+                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida", "ingredientes"]
                             }
                         }
                     }
@@ -877,31 +892,92 @@
                         "description": "Ração criada com sucesso"
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "A soma das quantidades dos ingredientes não coincide com a batida da ração"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
                 }
             }
-        },
-        "/racao/inserir-ingrediente": {
-            "post": {
-                "summary": "Inserir um ingrediente na fórmula de ração",
-                "tags": ["Ração"],
+        },     
+        "/racoes/update/{id}": {
+            "patch": {
+                "summary": "Rota responsável por atualizar uma ração",
+                "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
-                    "description": "Dados para inserir um ingrediente.",
+                    "description": "Dados para atualizar a ração",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "id_ingrediente": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example":"Nome da ração 2"
+                                    },
+                                    "id_categoria": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "tipo_racao": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "fases_utilizadas": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "batida": {
+                                        "type": "number", 
+                                        "example": 2000
+                                    }
+                                },
+                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida"]
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Ração atualizada com sucesso"
+                        },
+                        "400": {
+                            "description": "Requisição inválida. Forneça o id da ração"
+                        },
+                        "500": {
+                            "description": "Erro interno do servidor"
+                        }
+                    }
+                }
+            }
+        },   
+        "/racoes/insert-ingredientes": {
+            "post": {
+                "summary": "Rota responsável por inserir ingredientes na fórmula da ração",
+                "tags": ["Rações"],
+                "requestBody": {
+                    "description": "Dados para inserir um ingrediente",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id_racao": {
                                         "type": "integer",
                                         "example": 1
                                     },
-                                    "id_racao": {
+                                    "id_ingrediente": {
                                         "type": "integer",
                                         "example": 1
                                     },
@@ -927,13 +1003,110 @@
                     }
                 }
             }
-        },
-        "/racao/comprar": {
-            "post": {
-                "summary": "Comprar uma ração",
-                "tags": ["Ração"],
+        },    
+        "/racoes/update-ingredientes": {
+            "patch": {
+                "summary": "Rota responsável por atualizar ingredientes na fórmula da ração",
+                "tags": ["Rações"],
                 "requestBody": {
-                    "description": "Dados para comprar uma ração.",
+                    "description": "Dados para atualizar ingredientes",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id_racao": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "id_ingrediente": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "quantidade": {
+                                            "type": "number",
+                                            "example": 500
+                                        }
+                                    },
+                                    "required": ["id_racao", "id_ingrediente", "quantidade"]
+                                },
+                                "example": [
+                                    {
+                                        "id_racao": 1,
+                                        "id_ingrediente": 1,
+                                        "quantidade": 500
+                                    },
+                                    {
+                                        "id_racao": 1,
+                                        "id_ingrediente": 2,
+                                        "quantidade": 500
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingredientes atualizados na ração com sucesso"
+                    },
+                    "400": {
+                        "description": "A soma das quantidades dos ingredientes não coincide com a batida da ração"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },     
+        "/racoes/delete-ingrediente": {
+            "delete": {
+                "summary": "Rota responsável por remover ingredientes da fórmula da ração",
+                "tags": ["Rações"],
+                "requestBody": {
+                    "description": "Dados para remover ingredientes",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id_racao": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_ingrediente": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "required": ["id_racao", "id_ingrediente"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingrediente removido da ração com sucesso"
+                    },
+                    "400": {
+                        "description": "Requisição inválida. Forneça o id da ração e o id do ingrediente para remover o ingrediente da ração"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },               
+        "/racoes/comprar": {
+            "post": {
+                "summary": "Rota responsável por realizar a compra de uma ração",
+                "tags": ["Rações"],
+                "requestBody": {
+                    "description": "Dados para comprar a ração",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -984,10 +1157,10 @@
                 }
             }
         },
-        "/racao/produzir": {
+        "/racoes/produzir": {
             "post": {
-                "summary": "Produzir uma ração",
-                "tags": ["Ração"],
+                "summary": "Rota responsável por produzir uma ração",
+                "tags": ["Rações"],
                 "requestBody": {
                     "description": "Dados para produzir uma ração.",
                     "required": true,
@@ -1015,7 +1188,7 @@
                         "description": "Produção realizada com sucesso"
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o id da ração e a quantidade a ser produzida"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1023,71 +1196,11 @@
                 }
             }
         },
-        "/racao/update/{id}": {
-            "patch": {
-                "summary": "Atualizar uma ração",
-                "tags": ["Ração"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "description": "Dados para atualizar uma ração.",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "nome": {
-                                        "type": "string",
-                                        "example":"Nome da ração 2"
-                                    },
-                                    "id_categoria": {
-                                        "type": "integer",
-                                        "example": 3
-                                    },
-                                    "tipo_racao": {
-                                        "type": "integer",
-                                        "example": 0
-                                    },
-                                    "fases_utilizadas": {
-                                        "type": "integer",
-                                        "example": 2
-                                    },
-                                    "batida": {
-                                        "type": "number", 
-                                        "example": 2000
-                                    }
-                                },
-                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida"]
-                            }
-                        }
-                    },
-                    "responses": {
-                        "200": {
-                            "description": "Ração atualizada com sucesso"
-                        },
-                        "400": {
-                            "description": "Erro nos parâmetros de entrada"
-                        },
-                        "500": {
-                            "description": "Erro interno do servidor"
-                        }
-                    }
-                }
-            }
-        },
-        "/racao/delete/{id}": {
+        
+        "/racoes/delete/{id}": {
             "delete": {
-                "summary": "Deletar uma ração",
-                "tags": ["Ração"],
+                "summary": "Rota responsável por deletar uma ração",
+                "tags": ["Rações"],
                 "parameters": [
                     {
                         "name": "id",
@@ -1103,7 +1216,10 @@
                         "description": "Ração deletada com sucesso"
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o id da ração para deletar a ração"
+                    },
+                    "404": {
+                        "description": "Ração não encontrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1111,11 +1227,19 @@
                 }
             }
         },
-        "/grupo": {
+        "/grupos": {
             "get": {
-                "summary": "Obter todos os grupos, com a opção de filtrar por nome.",
+                "summary": "Rota responsável por obter todos os grupos",
                 "tags": ["Grupos"],
                 "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "ID do grupo para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "nome",
                         "in": "query",
@@ -1152,47 +1276,12 @@
                 }
             }
         },        
-        "/grupo/{id}": {
-            "get": {
-                "summary": "Obter um grupo por ID",
-                "tags": ["Grupos"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operação bem-sucedida",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "id": 1,
-                                    "nome": "Grupo 1"       
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
-                    "500": {
-                        "description": "Erro interno do servidor"
-                    }
-                }
-            }
-        },
-        "/grupo/create": {
+        "/grupos/create": {
             "post": {
-                "summary": "Cadastrar um novo grupo.",
+                "summary": "Rota responsável por cadastrar um novo grupo",
                 "tags": ["Grupos"],
                 "requestBody": {
-                    "description": "Dados para cadastrar um grupo.",
+                    "description": "Dados para cadastrar um grupo",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -1214,7 +1303,7 @@
                         "description": "Grupo cadastrado com sucesso"
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o nome do grupo"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1222,9 +1311,9 @@
                 }
             }
         },
-        "/grupo/update/{id}": {
+        "/grupos/update/{id}": {
             "patch": {
-                "summary": "Atualizar um grupo.",
+                "summary": "Rota responsável por atualizar um grupo",
                 "tags": ["Grupos"],
                 "parameters": [
                     {
@@ -1237,7 +1326,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Dados para atualizar um grupo.",
+                    "description": "Dados para atualizar um grupo",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -1258,7 +1347,7 @@
                             "description": "Grupo atualizada com sucesso"
                         },
                         "400": {
-                            "description": "Erro nos parâmetros de entrada"
+                            "description": "Requisição inválida. Forneça o id do grupo"
                         },
                         "500": {
                             "description": "Erro interno do servidor"
@@ -1267,9 +1356,9 @@
                 }
             }
         },
-        "/grupo/delete/{id}": {
+        "/grupos/delete/{id}": {
             "delete": {
-                "summary": "Rota responsável por deletar um grupo.",
+                "summary": "Rota responsável por deletar um grupo",
                 "tags": ["Grupos"],
                 "parameters": [
                     {
@@ -1293,7 +1382,7 @@
                         }
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o id do grupo"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1301,11 +1390,19 @@
                 }
             }
         },
-        "/categoria": {
+        "/categorias": {
             "get": {
-                "summary": "Obter todos as categorias, com a opção de filtrar por nome.",
+                "summary": "Rota responsável por obter todas as categorias",
                 "tags": ["Categorias"],
                 "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "ID da categoria para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "nome",
                         "in": "query",
@@ -1342,47 +1439,12 @@
                 }
             }
         },        
-        "/categoria/{id}": {
-            "get": {
-                "summary": "Obter uma categoria por ID",
-                "tags": ["Categorias"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Operação bem-sucedida",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "id": 1,
-                                    "nome": "Categoria 1"       
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Erro nos parâmetros de entrada"
-                    },
-                    "500": {
-                        "description": "Erro interno do servidor"
-                    }
-                }
-            }
-        },
-        "/categoria/create": {
+        "/categorias/create": {
             "post": {
-                "summary": "Cadastrar uma categoria.",
+                "summary": "Rota responsável por cadastrar uma categoria",
                 "tags": ["Categorias"],
                 "requestBody": {
-                    "description": "Dados para cadastrar uma categoria.",
+                    "description": "Dados para cadastrar uma categoria",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -1404,7 +1466,7 @@
                         "description": "Categoria cadastrada com sucesso"
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o nome da categoria"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1412,9 +1474,9 @@
                 }
             }
         },
-        "/categoria/update/{id}": {
+        "/categorias/update/{id}": {
             "patch": {
-                "summary": "Atualizar uma categoria.",
+                "summary": "Rota responsável por atualizar uma categoria",
                 "tags": ["Categorias"],
                 "parameters": [
                     {
@@ -1427,7 +1489,7 @@
                     }
                 ],
                 "requestBody": {
-                    "description": "Dados para atualizar uma categoria.",
+                    "description": "Dados para atualizar uma categoria",
                     "required": true,
                     "content": {
                         "application/json": {
@@ -1448,7 +1510,7 @@
                             "description": "Categoria atualizada com sucesso"
                         },
                         "400": {
-                            "description": "Erro nos parâmetros de entrada"
+                            "description": "Requisição inválida. Forneça o nome da categoria"
                         },
                         "500": {
                             "description": "Erro interno do servidor"
@@ -1457,9 +1519,9 @@
                 }
             }
         },
-        "/categoria/delete/{id}": {
+        "/categorias/delete/{id}": {
             "delete": {
-                "summary": "Rota responsável por deletar uma categoria.",
+                "summary": "Rota responsável por deletar uma categoria",
                 "tags": ["Categorias"],
                 "parameters": [
                     {
@@ -1483,7 +1545,7 @@
                         }
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Requisição inválida. Forneça o nome da categoria"
                     },
                     "500": {
                         "description": "Erro interno do servidor"

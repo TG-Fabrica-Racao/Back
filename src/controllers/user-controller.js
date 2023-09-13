@@ -6,8 +6,8 @@ module.exports = {
 
     getAllUser: async (request, response) => {
         try {
-            const { nome } = request.query;
-
+            const { id, nome, email, telefone, cargo } = request.query;
+    
             let query = 
                 `SELECT
                     usuarios.id,
@@ -20,38 +20,37 @@ module.exports = {
                         ELSE 'Desconhecido'
                     END AS status,
                     usuarios.cargo
-                FROM usuarios;`;
-
-            if (nome) {
-                query += ` WHERE usuarios.nome LIKE ?`;
-            }
-
-            const [result] = await mysql.execute(query, [`%${nome}%`]);
-            return response.status(200).json(result);
-        } catch (error) {
-            console.error(error);
-            return response.status(500).json({ message: 'Erro interno do servidor' });
-        }
-    },
-
-    getUserById: async (request, response) => {
-        try {
-            const query = 
-                `SELECT
-                    usuarios.id,
-                    usuarios.nome,
-                    usuarios.email,
-                    usuarios.telefone,
-                    CASE
-                        WHEN usuarios.status_usuario = 0 THEN 'Inativo'
-                        WHEN usuarios.status_usuario = 1 THEN 'Ativo'
-                        ELSE 'Desconhecido' -- Adicione um valor padrão caso o status não seja 0 ou 1
-                    END AS status,
-                    usuarios.cargo
                 FROM usuarios
-                WHERE usuarios.id = ?;`;
-
-            const [result] = await mysql.execute(query, [request.params.id]);
+                WHERE 1`;
+    
+            const params = [];
+    
+            if (id) {
+                query += ` AND usuarios.id = ?`;
+                params.push(id);
+            }
+    
+            if (nome) {
+                query += ` AND usuarios.nome LIKE ?`;
+                params.push(`%${nome}%`);
+            }
+    
+            if (email) {
+                query += ` AND usuarios.email LIKE ?`;
+                params.push(`%${email}%`);
+            }
+    
+            if (telefone) {
+                query += ` AND usuarios.telefone LIKE ?`;
+                params.push(`%${telefone}%`);
+            }
+    
+            if (cargo) {
+                query += ` AND usuarios.cargo LIKE ?`;
+                params.push(`%${cargo}%`);
+            }
+    
+            const [result] = await mysql.execute(query, params);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
@@ -86,10 +85,10 @@ module.exports = {
         try {
             const { nome, email, telefone, cargo } = request.body;
 
-            const [usuarioExistente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
+            const [usuario_existente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
 
-            if (usuarioExistente.length > 0) {
-                return response.status(400).json({ message: 'Este usuário já está cadastrado' });
+            if (usuario_existente.length > 0) {
+                return response.status(409).json({ message: 'Este e-mail já está cadastrado' });
             }
 
             const senha = 'senha123'
@@ -104,7 +103,7 @@ module.exports = {
 
             const [result] = await mysql.execute(query, [nome, email, senhaHash, telefone, 1, cargo]);
 
-            return response.status(201).json({ message: 'Usuário cadastrado com sucesso!', id: result.id});
+            return response.status(201).json({ message: 'Usuário cadastrado com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
@@ -118,22 +117,23 @@ module.exports = {
             const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
 
             if (result.length === 0) {
-                return response.status(401).json({ message: 'Usuário não encontrado' });
+                return response.status(404).json({ message: 'Usuário não encontrado' });
             }
 
             const user = result[0];
 
-            const senhaValida = await bcrypt.compare(senha, user.senha);
+            const senha_valida = await bcrypt.compare(senha, user.senha);
 
-            if (!senhaValida) {
-                return response.status(401).json({ message: 'Senha incorreta' });
+            if (!senha_valida) {
+                return response.status(401).json({ message: 'Usuário ou senha inválidos' });
             }
 
             const token = jwt.sign({
-                id_usuario: user.id,
+                id: user.id,
                 nome: user.nome,
                 email: user.email,
-                status: user.status_usuario,
+                telefone: user.telefone,
+                status_usuario: user.status_usuario,
                 cargo: user.cargo
             }, process.env.JWT_KEY, {
                 expiresIn: '5 days'
@@ -141,10 +141,11 @@ module.exports = {
 
             return response.status(200).json({ 
                 message: 'Autenticado com sucesso', 
-                id_usuario: user.id,
+                id: user.id,
                 nome: user.nome,
                 email: user.email,
-                status: user.status_usuario,
+                telefone: user.telefone,
+                status_usuario: user.status_usuario,
                 cargo: user.cargo,
                 token 
             });
@@ -184,21 +185,29 @@ module.exports = {
     
             const [result] = await mysql.execute('SELECT senha FROM usuarios WHERE id = ?', [request.params.id]);
     
+            if (!result || result.length === 0) {
+                return response.status(404).json({ message: 'Usuário não encontrado' });
+            }
+    
+            if (!senha_nova) {
+                return response.status(400).json({ message: 'Senha nova não informada' });
+            }
+    
             if (senha_atual && result.length > 0 && result[0].senha) {
-                const senhaCorreta = await bcrypt.compare(senha_atual, result[0].senha);
+                const senha_correta = await bcrypt.compare(senha_atual, result[0].senha);
     
-                if (senhaCorreta) {
-                    const senhaHash = await bcrypt.hash(senha_nova, 10);
+                if (senha_correta) {
+                    const senha_hash = await bcrypt.hash(senha_nova, 10);
     
-                    const updateQuery = 'UPDATE usuarios SET senha = ? WHERE id = ?';
-                    await mysql.execute(updateQuery, [senhaHash, request.params.id]);
+                    const query = 'UPDATE usuarios SET senha = ? WHERE id = ?';
+                    await mysql.execute(query, [senha_hash, request.params.id]);
     
-                    return response.status(200).json({ message: 'Senha atualizada com sucesso!' });
+                    return response.status(200).json({ message: 'Senha atualizada com sucesso' });
                 } else {
-                    return response.status(400).json({ message: 'Senha atual incorreta!' });
+                    return response.status(401).json({ message: 'Senha atual incorreta' });
                 }
             } else {
-                return response.status(400).json({ message: 'Senha atual não informada ou usuário não encontrado!' });
+                return response.status(400).json({ message: 'Senha atual não informada' });
             }
         } catch (error) {
             console.error(error);
@@ -210,10 +219,10 @@ module.exports = {
         try {
             const { nome, email, telefone, status, cargo } = request.body;
 
-            const [usuarioExistente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
+            const [usuario_existente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
 
-            if (usuarioExistente.length > 0) {
-                return response.status(400).json({ message: 'Este usuário já está cadastrado' });
+            if (usuario_existente.length > 0) {
+                return response.status(409).json({ message: 'Este usuário já está cadastrado' });
             }
 
             const query = 
@@ -221,8 +230,13 @@ module.exports = {
                 SET nome = ?, email = ?, telefone = ?, status_usuario = ?, cargo = ?
                 WHERE id = ?`;
 
-            await mysql.execute(query, [nome, email, telefone, status, cargo, request.params.id]);
-            return response.status(201).json({ message: 'Usuário atualizado com sucesso!' });
+            const [result] = await mysql.execute(query, [nome, email, telefone, status, cargo, request.params.id]);
+
+            if (!result || result.length === 0) {
+                return response.status(404).json({ message: 'Usuário não encontrado' });
+            }
+
+            return response.status(201).json({ message: 'Usuário atualizado com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
@@ -235,42 +249,57 @@ module.exports = {
                 `UPDATE usuarios
                 SET status_usuario = 0
                 WHERE id = ?`;
-
-            await mysql.execute(query, [request.params.id]);
-            return response.status(200).json({ message: 'Usuário desativado com sucesso!' });
+    
+            const [result] = await mysql.execute(query, [request.params.id]);
+    
+            if (!result || result.length === 0) {
+                return response.status(404).json({ message: 'Usuário não encontrado' });
+            }
+    
+            return response.status(200).json({ message: 'Usuário desativado com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
     },
-
+    
     enableUser: async (request, response) => {
         try {
             const query = 
                 `UPDATE usuarios
                 SET status_usuario = 1
                 WHERE id = ?`;
-
-            await mysql.execute(query, [request.params.id]);
-            return response.status(200).json({ message: 'Usuário ativado com sucesso!' });
+    
+            const [result] = await mysql.execute(query, [request.params.id]);
+    
+            if (!result || result.length === 0) {
+                return response.status(404).json({ message: 'Usuário não encontrado' });
+            }
+    
+            return response.status(200).json({ message: 'Usuário ativado com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
     },
-
+    
     deleteUser: async (request, response) => {
         try {
             const query = 
                 `DELETE FROM usuarios
                 WHERE id = ?`;
-
-            await mysql.execute(query, [request.params.id]);
-            return response.status(200).json({ message: 'Usuário deletado com sucesso!' });
+    
+            const [result] = await mysql.execute(query, [request.params.id]);
+    
+            if (!result || result.length === 0) {
+                return response.status(404).json({ message: 'Usuário não encontrado' });
+            }
+    
+            return response.status(200).json({ message: 'Usuário deletado com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    }
+    }    
     
 };

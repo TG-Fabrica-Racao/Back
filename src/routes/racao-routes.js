@@ -11,11 +11,9 @@ router.get('/historico-producao', login.verifyToken, racaoController.historicoPr
 
 router.get('/', login.verifyToken, racaoController.getAllRacoes);
 
-router.get('/:id', login.verifyToken, racaoController.getRacaoById);
-
 router.post('/create', login.verifyToken, racaoController.createRacao);
 
-router.post('/inserir-ingredientes', login.verifyToken, racaoController.insertIngredienteInRacao);
+router.post('/insert-ingredientes', login.verifyToken, racaoController.insertIngredienteInRacao);
 
 router.patch('/update-ingredientes', login.verifyToken, racaoController.updateIngredienteInRacao);
 

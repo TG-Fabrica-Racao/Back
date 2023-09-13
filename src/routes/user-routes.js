@@ -9,8 +9,6 @@ router.get('/logs', login.verifyToken, roles.adminRole, userController.getLogs);
 
 router.get('/', login.verifyToken, roles.adminRole, userController.getAllUser);
 
-router.get('/:id', login.verifyToken, roles.adminRole, userController.getUserById);
-
 router.post('/create', login.verifyToken, roles.adminRole, userController.createUser);
 
 router.post('/login', userController.userLogin);

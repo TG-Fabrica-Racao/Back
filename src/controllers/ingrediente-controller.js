@@ -6,7 +6,7 @@ module.exports = {
 
     getAllIngredientes: async (request, response) => {
         try {
-            const { nome, nome_grupo } = request.query;
+            const { nome, nome_grupo, id } = request.query;
     
             let query =
                 `SELECT 
@@ -20,15 +20,24 @@ module.exports = {
     
             const params = [];
     
-            if (nome || nome_grupo) {
+            if (nome || nome_grupo || id) {
                 query += ' WHERE';
+    
+                if (id) {
+                    query += ' ingredientes.id = ?';
+                    params.push(id);
+                }
+    
+                if (nome && (nome_grupo || id)) {
+                    query += ' AND';
+                }
     
                 if (nome) {
                     query += ' ingredientes.nome LIKE ?';
                     params.push(`%${nome}%`);
                 }
     
-                if (nome && nome_grupo) {
+                if (nome_grupo && (nome || id)) {
                     query += ' AND';
                 }
     
@@ -44,28 +53,7 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
-    
-    getIngredienteById: async (request, response) => {
-        try {
-            const query =
-                `SELECT 
-                    ingredientes.id,
-                    ingredientes.nome,
-                    grupos.nome AS grupo,
-                    ingredientes.estoque_minimo,
-                    ingredientes.estoque_atual
-                FROM ingredientes
-                INNER JOIN grupos ON ingredientes.id_grupo = grupos.id
-                WHERE ingredientes.id = ?;`;
-    
-            const [result] = await mysql.execute(query, [request.params.id]);
-            return response.status(200).json(result);
-        } catch (error) {
-            console.error(error);
-            return response.status(500).json({ message: 'Erro interno do servidor' });
-        }
-    },
+    },    
 
     historicoCompras: async (request, response) => {
         try {
@@ -118,7 +106,7 @@ module.exports = {
                     (?, ?, ?)`;
 
             const [result] = await mysql.execute(query, [nome, id_grupo, estoque_minimo]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 1, `O usuário ${decodedToken.nome} cadastrou o ingrediente ${nome}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 1, `O usuário ${decodedToken.nome} cadastrou o ingrediente ${nome}`]);
             return response.status(201).json({ message: 'Ingrediente cadastrado com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -149,7 +137,7 @@ module.exports = {
             const valor_total = quantidade_bruta * valor_unitario;
 
             const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = estoque_atual + ? WHERE id = ?', [quantidade_liquida, id_ingrediente]);
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });
         } catch (error) {
@@ -170,8 +158,12 @@ module.exports = {
                     SET nome = ?, id_grupo = ?, estoque_minimo = ?
                 WHERE id = ?`;
 
+            if (!request.params.id) {
+                return response.status(400).json({ message: 'Requisição inválida. Forneça o id do ingrediente' });
+            }
+
             await mysql.execute(query, [nome, id_grupo, estoque_minimo, request.params.id]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 2, `O usuário ${decodedToken.nome} atualizou o ingrediente ${nome}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 2, `O usuário ${decodedToken.nome} atualizou o ingrediente ${nome}`]);
             return response.status(200).json({ message: 'Ingrediente atualizado com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -188,8 +180,12 @@ module.exports = {
                 `DELETE FROM ingredientes
                 WHERE id = ?`;
 
+            if (!request.params.id) {
+                return response.status(400).json({ message: 'Requisição inválida. Forneça o id do ingrediente' });
+            }
+
             await mysql.execute(query, [request.params.id]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 3, `O usuário ${decodedToken.nome} deletou o ingrediente ${request.params.id}`]);        
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 3, `O usuário ${decodedToken.nome} deletou o ingrediente ${request.params.id}`]);        
             return response.status(200).json({ message: 'Ingrediente deletado com sucesso!' });
         } catch (error) {
             console.error(error);

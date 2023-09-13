@@ -6,8 +6,6 @@ const router = express.Router();
 
 router.get('/', login.verifyToken, categoriaController.getAllCategorias);
 
-router.get('/:id', login.verifyToken, categoriaController.getCategoriaById);
-
 router.post('/create', login.verifyToken, categoriaController.createCategoria);
 
 router.patch('/update/:id', login.verifyToken, categoriaController.updateCategoria);

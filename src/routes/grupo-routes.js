@@ -6,8 +6,6 @@ const router = express.Router();
 
 router.get('/', login.verifyToken, grupoController.getAllGrupos);
 
-router.get('/:id', login.verifyToken, grupoController.getGrupoById);
-
 router.post('/create', login.verifyToken, grupoController.createGrupo);
 
 router.patch('/update/:id', login.verifyToken, grupoController.updateGrupo);
