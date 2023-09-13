@@ -15,8 +15,6 @@ router.get('/:id', login.verifyToken, racaoController.getRacaoById);
 
 router.post('/create', login.verifyToken, racaoController.createRacao);
 
-router.post('/inserir-ingredientes', login.verifyToken, racaoController.insertIngredienteInRacao);
-
 router.patch('/update-ingredientes', login.verifyToken, racaoController.updateIngredienteInRacao);
 
 router.delete('/delete-ingrediente', login.verifyToken, racaoController.deleteIngredienteFromRacao);
