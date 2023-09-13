@@ -179,39 +179,6 @@ module.exports = {
         }
     },
 
-    insertIngredienteInRacao: async (request, response) => {
-        try {
-            const token = request.header('Authorization');
-            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
-            const ingredientes = request.body;
-    
-            if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça uma matriz de ingredientes para inserir.' });
-            }
-    
-            const insertIds = [];
-    
-            for (const ingrediente of ingredientes) {
-                const { id_racao, id_ingrediente, quantidade } = ingrediente;
-    
-                const query =
-                    `INSERT INTO ingrediente_racao
-                        (id_racao, id_ingrediente, quantidade)
-                    VALUES
-                        (?, ?, ?)`;
-    
-                const [result] = await mysql.query(query, [id_racao, id_ingrediente, quantidade]);
-                insertIds.push(result.insertId);
-            }
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 7, `O usuário ${decodedToken.nome} adicionou ingredinte(s) na fórmula da ração ${id_racao}`]);         
-            return response.status(201).json({ message: 'Ingredientes inseridos na ração com sucesso!'});
-        } catch (error) {
-            console.error(error);
-            return response.status(500).json({ message: 'Erro interno do servidor' });
-        }
-    },    
-
     updateIngredienteInRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
@@ -298,7 +265,7 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-            
+
             const { id_racao, quantidade } = request.body;
 
             const id_usuario = decodedToken.id_usuario;
