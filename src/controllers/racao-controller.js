@@ -128,17 +128,23 @@ module.exports = {
             
             const { nome, id_categoria, tipo_racao, fase_utilizada, batida, ingredientes } = request.body;
     
-            const insertRacaoQuery =
+            const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
+    
+            if (soma_quantidades !== batida) {
+                return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
+            }
+    
+            const racao_query =
                 `INSERT INTO racoes
                     (nome, id_categoria, tipo_racao, fase_utilizada, batida)
                 VALUES
                     (?, ?, ?, ?, ?)`;
     
-            const [result] = await mysql.query(insertRacaoQuery, [nome, id_categoria, tipo_racao, fase_utilizada, batida]);
-            const racaoId = result.insertId;
+            const [result] = await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, batida]);
+            const racao_id = result.insertId;
     
             if (Array.isArray(ingredientes) && ingredientes.length > 0) {
-                const insertIngredienteQuery =
+                const insert_ingrediente =
                     `INSERT INTO ingrediente_racao
                         (id_racao, id_ingrediente, quantidade)
                     VALUES
@@ -146,18 +152,18 @@ module.exports = {
     
                 for (const ingrediente of ingredientes) {
                     const { id_ingrediente, quantidade } = ingrediente;
-                    await mysql.query(insertIngredienteQuery, [racaoId, id_ingrediente, quantidade]);
+                    await mysql.query(insert_ingrediente, [racao_id, id_ingrediente, quantidade]);
                 }
             }
     
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 5, `O usuário ${decodedToken.nome} cadastrou a ração ${nome}`]);        
-            return response.status(201).json({ message: 'Ração cadastrada com sucesso!', id: racaoId });
+            return response.status(201).json({ message: 'Ração cadastrada com sucesso!', id: racao_id });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
-
+    },
+    
     updateRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
@@ -179,23 +185,92 @@ module.exports = {
         }
     },
 
+    insertIngredienteInRacao: async (request, response) => {
+        try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+    
+            const ingredientes = request.body;
+    
+            if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
+                return response.status(400).json({ message: 'Requisição inválida. Forneça uma matriz de ingredientes para inserir.' });
+            }
+    
+            const idRacaoSet = new Set(ingredientes.map(ingrediente => ingrediente.id_racao));
+            if (idRacaoSet.size !== 1) {
+                return response.status(400).json({ message: 'Todos os ingredientes devem pertencer à mesma ração.' });
+            }
+    
+            const id_racao = ingredientes[0].id_racao;
+    
+            const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
+    
+            const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
+    
+            if (!batida_racao || soma_quantidades !== batida_racao[0].batida) {
+                return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
+            }
+    
+            const values = [];
+    
+            for (const ingrediente of ingredientes) {
+                const { id_ingrediente, quantidade } = ingrediente;
+    
+                const query =
+                    `INSERT INTO ingrediente_racao
+                        (id_racao, id_ingrediente, quantidade)
+                    VALUES
+                        (?, ?, ?)`;
+    
+                const [result] = await mysql.query(query, [id_racao, id_ingrediente, quantidade]);
+                values.push(result.values);
+            }
+    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 7, `O usuário ${decodedToken.nome} adicionou ingrediente(s) na fórmula da ração ${id_racao}`]);
+    
+            return response.status(201).json({ message: 'Ingredientes inseridos na ração com sucesso!' });
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    },      
+
     updateIngredienteInRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
+    
             const ingredientes = request.body;
     
             if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
                 return response.status(400).json({ message: 'Requisição inválida. Forneça uma matriz de ingredientes para atualizar.' });
             }
     
-            for (const ingrediente of ingredientes) {
-                const { id_racao, id_ingrediente, quantidade } = ingrediente;
+            // Verificar se todos os ingredientes têm o mesmo id_racao
+            const idRacaoSet = new Set(ingredientes.map(ingrediente => ingrediente.id_racao));
+            if (idRacaoSet.size !== 1) {
+                return response.status(400).json({ message: 'Todos os ingredientes devem pertencer à mesma ração.' });
+            }
     
-                if (quantidade === null || quantidade === undefined) {
-                    return response.status(400).json({ message: 'A quantidade não pode ser nula ou indefinida.' });
+            const id_racao = ingredientes[0].id_racao;
+    
+            // Calcular a soma das quantidades dos ingredientes a serem atualizados
+            const soma_quantidades = ingredientes.reduce((total, ingrediente) => {
+                if (ingrediente.quantidade === null || ingrediente.quantidade === undefined) {
+                    throw new Error('A quantidade não pode ser nula ou indefinida.');
                 }
+                return total + ingrediente.quantidade;
+            }, 0);
+    
+            // Consultar a batida da ração
+            const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
+    
+            if (!batida_racao || soma_quantidades !== batida_racao[0].batida) {
+                return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
+            }
+    
+            for (const ingrediente of ingredientes) {
+                const { id_ingrediente, quantidade } = ingrediente;
     
                 const query = `
                     UPDATE ingrediente_racao
@@ -205,13 +280,17 @@ module.exports = {
     
                 await mysql.query(query, [quantidade, id_racao, id_ingrediente]);
             }
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 8, `O usuário ${decodedToken.nome} alterou a fórmula da ração ${id_racao}`]);         
+    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 8, `O usuário ${decodedToken.nome} alterou a fórmula da ração ${id_racao}`]);
             return response.status(200).json({ message: 'Ingredientes atualizados na ração com sucesso!' });
         } catch (error) {
             console.error(error);
+            if (error.message === 'A quantidade não pode ser nula ou indefinida.') {
+                return response.status(400).json({ message: error.message });
+            }
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },     
 
     deleteIngredienteFromRacao: async (request, response) => {
         try {

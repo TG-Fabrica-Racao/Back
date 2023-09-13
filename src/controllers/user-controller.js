@@ -136,7 +136,7 @@ module.exports = {
                 status: user.status_usuario,
                 cargo: user.cargo
             }, process.env.JWT_KEY, {
-                expiresIn: '1h'
+                expiresIn: '5 days'
             });
 
             return response.status(200).json({ 
