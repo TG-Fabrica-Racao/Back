@@ -1,0 +1,1495 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API para gestão de uma fábrica de ração para animais",
+        "description": "",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:3000",
+            "description": "Servidor Local"
+        }
+    ],
+    "paths": {
+        "/user": {
+            "get": {
+                "summary": "Rota responsável por retornar todos os usuários",
+                "tags": ["Usuário"],
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Filtrar usuários por nome (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id_usuario": 1,
+                                        "nome": "Usuário 1",
+                                        "email": "usuario1@email.com",
+                                        "cargo": "Cargo 1"
+                                    },
+                                    {
+                                        "id_usuario": 2,
+                                        "nome": "Usuário 2",
+                                        "email": "usuario2@email.com",
+                                        "cargo": "Cargo 2"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Token de autenticação ausente"
+                    },
+                    "403": {
+                        "description": "Token inválido"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/{id}": {
+            "get": {
+                "summary": "Rota responsável por retornar um usuário específico.",
+                "tags": ["Usuário"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id_usuario": 1,
+                                    "nome": "Usuário 1",
+                                    "email": "usuario1@email.com",
+                                    "cargo": "Cargo 1"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "401": {
+                        "description": "Token de autenticação ausente"
+                    },
+                    "403": {
+                        "description": "Token inválido"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/identify": {
+            "post": {
+                "summary": "Rota responsável por identificar um usuário através do token de autenticação.",
+                "tags": ["Usuário"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id_usuario": 123,
+                                    "nome": "Nome do Usuário",
+                                    "email": "usuario@email.com",
+                                    "cargo": "Cargo do Usuário"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/create": {
+            "post": {
+                "summary": "Rota responsável por cadastrar um novo usuário.",
+                "tags": ["Usuário"],
+                "requestBody": {
+                    "description": "Dados para criar um usuário.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Nome do usuário"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "usuario@example.com"
+                                    },
+                                    "cargo": {
+                                        "type": "string",
+                                        "example": "Administrador/Funcionário"
+                                    }
+                                },
+                                "required": ["nome", "email", "cargo"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Usuário cadastrado com sucesso!",
+                                    "link": "http://localhost/user/{id_usuario}"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "401": {
+                        "description": "Token de autenticação ausente"
+                    },
+                    "403": {
+                        "description": "Token inválido"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/login": {
+            "post": {
+                "summary": "Rota responsável por efetuar o Login do usuário.",
+                "tags": ["Usuário"],
+                "requestBody": {
+                    "description": "Dados para efetuar login do usuário.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "rodolfo@example.com"
+                                    },
+                                    "senha": {
+                                        "type": "string",
+                                        "example": "12345"
+                                    }
+                                },
+                                "required": ["email", "senha"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id_usuario": 1,
+                                    "nome": "Nome do Usuário",
+                                    "email": "usuario1@email.com",
+                                    "cargo": "Cargo do Usuário",
+                                    "message": "Autenticação concluída!",
+                                    "token": "token"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/update-password/{id}": {
+            "patch": {
+                "summary": "Rota responsável por atualizar a senha do usuário.",
+                "tags": ["Usuário"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dados para atualizar a senha do usuário.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "senhaAtual": {
+                                        "type": "string",
+                                        "example": "senha123"
+                                    },
+                                    "senhaNova": {
+                                        "type": "string",
+                                        "example": "12345"
+                                    }
+                                },
+                                "required": ["senhaAtual", "senhaNova"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Senha alterada com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "401": {
+                        "description": "Token de autenticação ausente"
+                    },
+                    "403": {
+                        "description": "Token inválido"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/disable/{id}": {
+            "patch": {
+                "summary": "Rota responsável por desabilitar um usuário.",
+                "tags": ["Usuário"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuário desabilitado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "401": {
+                        "description": "Token de autenticação ausente"
+                    },
+                    "403": {
+                        "description": "Token inválido"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/user/delete/{id}": {
+            "delete": {
+                "summary": "Rota responsável por deletar um usuário.",
+                "tags": ["Usuário"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuário deletado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "401": {
+                        "description": "Token de autenticação ausente"
+                    },
+                    "403": {
+                        "description": "Token inválido"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/ingrediente": {
+            "get": {
+                "summary": "Rota responsável por retornar ingredientes de acordo com nome ou grupo. Caso não seja fornecido nenhum dos dois, a rota irá retornar todos os ingredientes.",
+                "tags": ["Ingrediente"],
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Nome do ingrediente para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "grupo",
+                        "in": "query",
+                        "description": "Grupo do ingrediente para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "nome": "Milho",
+                                        "id_grupo": 8,
+                                        "estoque_minimo": 1000
+                                    },
+                                    {
+                                        "id": 2,
+                                        "nome": "Trigo",
+                                        "id_grupo": 8,
+                                        "estoque_minimo": 800
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    }
+                }
+            }
+        },        
+        "/ingrediente/{id}": {
+            "get": {
+                "summary": "Rota responsável por retornar um ingrediente específico.",
+                "tags": ["Ingrediente"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1,
+                                    "nome": "Milho",
+                                    "id_grupo": 8,
+                                    "estoque_minimo": 1000
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/ingrediente/historico-compras": {
+            "get": {
+                "summary": "Rota responsável por retornar o histórico de compras dos ingredientes.",
+                "tags": ["Ingrediente"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "data_compra": "2023-08-29",
+                                        "id_ingrediente": 1,
+                                        "quantidade_bruta": 10000,
+                                        "pre_limpeza": 300,
+                                        "valor_unitario": 1.90,
+                                        "numero_nota": "1498559",
+                                        "fornecedor": "Vitamix"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/ingrediente/create": {
+            "post": {
+                "summary": "Rota responsável por cadastar um novo ingrediente.",
+                "tags": ["Ingrediente"],
+                "requestBody": {
+                    "description": "Dados para criar um ingrediente.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Milho"
+                                    },
+                                    "id_grupo": {
+                                        "type": "integer",
+                                        "example": 8
+                                    },
+                                    "estoque_minimo": {
+                                        "type": "number",
+                                        "example": 1000
+                                    }
+                                },
+                                "required": ["nome", "id_grupo", "estoque_minimo"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ingrediente criado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Ingrediente cadastrado com sucesso",
+                                    "ID": 3
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/ingrediente/comprar": {
+            "post": {
+                "summary": "Rota responsável por realizar a compra de um ingrediente.",
+                "tags": ["Ingrediente"],
+                "requestBody": {
+                    "description": "Dados para comprar um ingrediente.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data_compra": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-08-29"
+                                    },
+                                    "id_ingrediente": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantidade_bruta": {
+                                        "type": "number",
+                                        "example": 10000
+                                    },
+                                    "pre_limpeza": {
+                                        "type": "number",
+                                        "example": 300
+                                    },
+                                    "valor_unitario": {
+                                        "type": "number",
+                                        "example": 1.90
+                                    },
+                                    "numero_nota": {
+                                        "type": "string",
+                                        "example": "1498559"
+                                    },
+                                    "fornecedor": {
+                                        "type": "string",
+                                        "example": "Vitamix"
+                                    }
+                                },
+                                "required": ["data_compra", "id_ingrediente", "quantidade_bruta", "pre_limpeza", "valor_unitario", "numero_nota", "fornecedor"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Compra realizada com sucesso",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Compra realizada com sucesso",
+                                    "ID": 4
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/ingrediente/update/{id}": {
+            "patch": {
+                "summary": "Rota responsável por atualizar um ingrediente.",
+                "tags": ["Ingrediente"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dados para atualizar um ingrediente.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Farinha láctea"
+                                    },
+                                    "id_grupo": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "estoque_minimo": {
+                                        "type": "number",
+                                        "example": 2000
+                                    }
+                                },
+                                "required": ["nome", "id_grupo", "estoque_minimo"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingrediente atualizado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Ingrediente atualizado com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/ingrediente/delete/{id}": {
+            "delete": {
+                "summary": "Rota responsável por deletar um ingrediente.",
+                "tags": ["Ingrediente"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingrediente deletado com sucesso",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Ingrediente deletado com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao": {
+            "get": {
+                "summary": "Obter rações com a opção de filtrar por nome, categoria e fase_utilizada.",
+                "tags": ["Ração"],
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Nome da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "categoria",
+                        "in": "query",
+                        "description": "Categoria da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fase_utilizada",
+                        "in": "query",
+                        "description": "Fase utilizada da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "nome": "Ração 1",
+                                        "categoria": "Categoria 1",
+                                        "fase_utilizada": "Fase 1",
+                                        "tipo_racao": "Produção Própria",
+                                        "ingredientes_e_quantidades": "Ingrediente 1 (500Kg), Ingrediente 2 (300Kg)"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "nome": "Ração 2",
+                                        "categoria": "Categoria 2",
+                                        "fase_utilizada": "Fase 2",
+                                        "tipo_racao": "Comprada",
+                                        "ingredientes_e_quantidades": "Ingrediente 3 (600Kg), Ingrediente 4 (400Kg)"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/racao/{id}": {
+            "get": {
+                "summary": "Obter uma ração por ID",
+                "tags": ["Ração"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1,
+                                    "nome": "Ração 1",
+                                    "tipo_racao": "Produção Própria",
+                                    "categoria": "Categoria 1",
+                                    "fase_utilizada": "Fase 1",
+                                    "batida": 1000                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao/historico-compras": {
+            "get": {
+                "summary": "Obter o histórico de compras de rações",
+                "tags": ["Ração"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "data_compra": "2023-09-04",
+                                        "racao": "Ração 1",
+                                        "quantidade": 1000,
+                                        "valor_unitario": 1.5,
+                                        "valor_total": 1500,
+                                        "numero_nota": "12345",
+                                        "fornecedor": "Fornecedor 1"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao/create": {
+            "post": {
+                "summary": "Criar uma nova fórmula de ração",
+                "tags": ["Ração"],
+                "requestBody": {
+                    "description": "Dados para criar uma ração.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Nome da ração"
+                                    },
+                                    "id_categoria": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "tipo_racao": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "fases_utilizadas": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "batida": {
+                                        "type": "number",
+                                        "example": 1000
+                                    }
+                                },
+                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ração criada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao/inserir-ingrediente": {
+            "post": {
+                "summary": "Inserir um ingrediente na fórmula de ração",
+                "tags": ["Ração"],
+                "requestBody": {
+                    "description": "Dados para inserir um ingrediente.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id_ingrediente": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "id_racao": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantidade": {
+                                        "type": "number",
+                                        "example": 500
+                                    }
+                                },
+                                "required": ["id_ingrediente", "id_racao", "quantidade"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ingrediente inserido com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao/comprar": {
+            "post": {
+                "summary": "Comprar uma ração",
+                "tags": ["Ração"],
+                "requestBody": {
+                    "description": "Dados para comprar uma ração.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "data_compra": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2023-10-04"
+                                    },
+                                    "id_racao": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantidade": {
+                                        "type": "number",
+                                        "example": 70000
+                                    },
+                                    "valor_unitario": {
+                                        "type": "number",
+                                        "example": 1.90
+                                    },
+                                    "numero_nota": {
+                                        "type": "string",
+                                        "example": "1749050390"
+                                    },
+                                    "fornecedor": {
+                                        "type": "string",
+                                        "example": "Leandro"
+                                    }
+                                },
+                                "required": ["data_compra", "id_racao", "quantidade", "valor_unitario", "numero_nota", "fornecedor"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Compra realizada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao/produzir": {
+            "post": {
+                "summary": "Produzir uma ração",
+                "tags": ["Ração"],
+                "requestBody": {
+                    "description": "Dados para produzir uma ração.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id_racao": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantidade": {
+                                        "type": "number",
+                                        "example": 1500
+                                    }
+                                },
+                                "required": ["id_racao", "quantidade"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Produção realizada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racao/update/{id}": {
+            "patch": {
+                "summary": "Atualizar uma ração",
+                "tags": ["Ração"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dados para atualizar uma ração.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example":"Nome da ração 2"
+                                    },
+                                    "id_categoria": {
+                                        "type": "integer",
+                                        "example": 3
+                                    },
+                                    "tipo_racao": {
+                                        "type": "integer",
+                                        "example": 0
+                                    },
+                                    "fases_utilizadas": {
+                                        "type": "integer",
+                                        "example": 2
+                                    },
+                                    "batida": {
+                                        "type": "number", 
+                                        "example": 2000
+                                    }
+                                },
+                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida"]
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Ração atualizada com sucesso"
+                        },
+                        "400": {
+                            "description": "Erro nos parâmetros de entrada"
+                        },
+                        "500": {
+                            "description": "Erro interno do servidor"
+                        }
+                    }
+                }
+            }
+        },
+        "/racao/delete/{id}": {
+            "delete": {
+                "summary": "Deletar uma ração",
+                "tags": ["Ração"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ração deletada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/grupo": {
+            "get": {
+                "summary": "Obter todos os grupos, com a opção de filtrar por nome.",
+                "tags": ["Grupos"],
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Nome do grupo para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "nome": "Grupo 1"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "nome": "Grupo 2"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/grupo/{id}": {
+            "get": {
+                "summary": "Obter um grupo por ID",
+                "tags": ["Grupos"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1,
+                                    "nome": "Grupo 1"       
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/grupo/create": {
+            "post": {
+                "summary": "Cadastrar um novo grupo.",
+                "tags": ["Grupos"],
+                "requestBody": {
+                    "description": "Dados para cadastrar um grupo.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Grupo 1"
+                                    }
+                                },
+                                "required": ["nome"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Grupo cadastrado com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/grupo/update/{id}": {
+            "patch": {
+                "summary": "Atualizar um grupo.",
+                "tags": ["Grupos"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dados para atualizar um grupo.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example":"Nome do grupo 2"
+                                    }
+                                },
+                                "required": ["nome"]
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Grupo atualizada com sucesso"
+                        },
+                        "400": {
+                            "description": "Erro nos parâmetros de entrada"
+                        },
+                        "500": {
+                            "description": "Erro interno do servidor"
+                        }
+                    }
+                }
+            }
+        },
+        "/grupo/delete/{id}": {
+            "delete": {
+                "summary": "Rota responsável por deletar um grupo.",
+                "tags": ["Grupos"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Grupo deletado com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/categoria": {
+            "get": {
+                "summary": "Obter todos as categorias, com a opção de filtrar por nome.",
+                "tags": ["Categorias"],
+                "parameters": [
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Nome da categoria para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "nome": "Categoria 1"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "nome": "Categoria 2"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },        
+        "/categoria/{id}": {
+            "get": {
+                "summary": "Obter uma categoria por ID",
+                "tags": ["Categorias"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "id": 1,
+                                    "nome": "Categoria 1"       
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/categoria/create": {
+            "post": {
+                "summary": "Cadastrar uma categoria.",
+                "tags": ["Categorias"],
+                "requestBody": {
+                    "description": "Dados para cadastrar uma categoria.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Categoria 1"
+                                    }
+                                },
+                                "required": ["nome"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Categoria cadastrada com sucesso"
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/categoria/update/{id}": {
+            "patch": {
+                "summary": "Atualizar uma categoria.",
+                "tags": ["Categorias"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dados para atualizar uma categoria.",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example":"Nome da categoria 2"
+                                    }
+                                },
+                                "required": ["nome"]
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Categoria atualizada com sucesso"
+                        },
+                        "400": {
+                            "description": "Erro nos parâmetros de entrada"
+                        },
+                        "500": {
+                            "description": "Erro interno do servidor"
+                        }
+                    }
+                }
+            }
+        },
+        "/categoria/delete/{id}": {
+            "delete": {
+                "summary": "Rota responsável por deletar uma categoria.",
+                "tags": ["Categorias"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Categoria deletada com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        }
+    }
+}
