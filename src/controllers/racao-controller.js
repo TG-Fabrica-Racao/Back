@@ -30,10 +30,16 @@ module.exports = {
                     racoes.tipo_racao,
                     fases_granja.nome AS fase_utilizada,
                     racoes.batida,
-                    GROUP_CONCAT(CONCAT(ingredientes.id, ': ', ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')) AS ingredientes
+                    IFNULL(
+                        GROUP_CONCAT(
+                            CONCAT(ingredientes.id, ': ', ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')
+                            SEPARATOR ', '
+                        ),
+                        NULL
+                    ) AS ingredientes
                 FROM racoes
-                INNER JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
-                INNER JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
+                LEFT JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
+                LEFT JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
                 INNER JOIN categorias ON racoes.id_categoria = categorias.id
                 INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
                 WHERE ${where}
@@ -120,25 +126,43 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
             
-            const { nome, id_categoria, tipo_racao, fase_utilizada, batida } = request.body;
-
-            const query =
+            const { nome, id_categoria, tipo_racao, fase_utilizada, batida, ingredientes } = request.body;
+    
+            const insertRacaoQuery =
                 `INSERT INTO racoes
                     (nome, id_categoria, tipo_racao, fase_utilizada, batida)
                 VALUES
                     (?, ?, ?, ?, ?)`;
-            
-            const [result] = await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, batida]);
+    
+            const [result] = await mysql.query(insertRacaoQuery, [nome, id_categoria, tipo_racao, fase_utilizada, batida]);
+            const racaoId = result.insertId;
+    
+            if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+                const insertIngredienteQuery =
+                    `INSERT INTO ingrediente_racao
+                        (id_racao, id_ingrediente, quantidade)
+                    VALUES
+                        (?, ?, ?)`;
+    
+                for (const ingrediente of ingredientes) {
+                    const { id_ingrediente, quantidade } = ingrediente;
+                    await mysql.query(insertIngredienteQuery, [racaoId, id_ingrediente, quantidade]);
+                }
+            }
+    
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 5, `O usuário ${decodedToken.nome} cadastrou a ração ${nome}`]);        
-            return response.status(201).json({ message: 'Ração cadastrada com sucesso!', id: result.insertId });
+            return response.status(201).json({ message: 'Ração cadastrada com sucesso!', id: racaoId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     updateRacao: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const { nome, id_categoria, tipo_racao, fase_utilizada, batida } = request.body;
 
             const query =
@@ -157,6 +181,9 @@ module.exports = {
 
     insertIngredienteInRacao: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const ingredientes = request.body;
     
             if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
@@ -187,6 +214,9 @@ module.exports = {
 
     updateIngredienteInRacao: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const ingredientes = request.body;
     
             if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
@@ -218,6 +248,9 @@ module.exports = {
 
     deleteIngredienteFromRacao: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const { id_racao, id_ingrediente } = request.body;
     
             if (!id_racao || !id_ingrediente) {
@@ -239,6 +272,9 @@ module.exports = {
 
     comprarRacao: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const { data_compra, id_racao, quantidade, valor_unitario, numero_nota, fornecedor } = request.body;
 
             const query =
@@ -260,6 +296,9 @@ module.exports = {
 
     produzirRacao: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+            
             const { id_racao, quantidade } = request.body;
 
             const id_usuario = decodedToken.id_usuario;
