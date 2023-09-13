@@ -128,6 +128,9 @@ module.exports = {
 
     comprarIngrediente: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const { data_compra, 
                     id_ingrediente, 
                     quantidade_bruta, 
@@ -146,6 +149,7 @@ module.exports = {
             const valor_total = quantidade_bruta * valor_unitario;
 
             const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = estoque_atual + ? WHERE id = ?', [quantidade_liquida, id_ingrediente]);
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });
         } catch (error) {
@@ -156,6 +160,9 @@ module.exports = {
     
     updateIngrediente: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const { nome, id_grupo, estoque_minimo } = request.body;
 
             const query = 
@@ -164,6 +171,7 @@ module.exports = {
                 WHERE id = ?`;
 
             await mysql.execute(query, [nome, id_grupo, estoque_minimo, request.params.id]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 2, `O usuário ${decodedToken.nome} atualizou o ingrediente ${nome}`]);
             return response.status(200).json({ message: 'Ingrediente atualizado com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -173,11 +181,15 @@ module.exports = {
 
     deleteIngrediente: async (request, response) => {
         try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
             const query = 
                 `DELETE FROM ingredientes
                 WHERE id = ?`;
 
             await mysql.execute(query, [request.params.id]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 3, `O usuário ${decodedToken.nome} deletou o ingrediente ${request.params.id}`]);        
             return response.status(200).json({ message: 'Ingrediente deletado com sucesso!' });
         } catch (error) {
             console.error(error);

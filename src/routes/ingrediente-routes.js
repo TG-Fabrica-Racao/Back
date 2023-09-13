@@ -5,18 +5,18 @@ const roles = require('../middlewares/roles-middleware');
 
 const router = express.Router();
 
-router.get('/historico-compras', ingredienteController.historicoCompras);
+router.get('/historico-compras', login.verifyToken, roles.adminRole, ingredienteController.historicoCompras);
 
-router.get('/', ingredienteController.getAllIngredientes);
+router.get('/', login.verifyToken, ingredienteController.getAllIngredientes);
 
-router.get('/:id', ingredienteController.getIngredienteById);
+router.get('/:id', login.verifyToken, ingredienteController.getIngredienteById);
 
-router.post('/create', ingredienteController.createIngrediente);
+router.post('/create', login.verifyToken, ingredienteController.createIngrediente);
 
-router.post('/comprar', ingredienteController.comprarIngrediente);
+router.post('/comprar', login.verifyToken, roles.adminRole, ingredienteController.comprarIngrediente);
 
-router.patch('/update/:id', ingredienteController.updateIngrediente);
+router.patch('/update/:id', login.verifyToken, ingredienteController.updateIngrediente);
 
-router.delete('/delete/:id', ingredienteController.deleteIngrediente);
+router.delete('/delete/:id', login.verifyToken, ingredienteController.deleteIngrediente);
 
 module.exports = router;

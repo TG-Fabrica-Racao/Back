@@ -51,21 +51,17 @@ module.exports = {
     getRacaoById: async (request, response) => {
         try {
             const query = `
-                SELECT
-                    racoes.id,
-                    racoes.nome,
-                    categorias.nome AS categoria,
-                    racoes.tipo_racao,
-                    fases_granja.nome AS fase_utilizada,
-                    racoes.batida,
-                    GROUP_CONCAT(CONCAT(ingredientes.id, ': ', ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')) AS ingredientes
-                FROM racoes
-                INNER JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
-                INNER JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
-                INNER JOIN categorias ON racoes.id_categoria = categorias.id
-                INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
-                WHERE racoes.id = ?
-                GROUP BY racoes.id, racoes.nome, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida;
+            SELECT
+                racoes.id,
+                racoes.nome,
+                categorias.nome AS categoria,
+                racoes.tipo_racao,
+                fases_granja.nome AS fase_utilizada,
+                racoes.batida
+            FROM racoes
+            INNER JOIN categorias ON racoes.id_categoria = categorias.id
+            INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
+            WHERE racoes.id = ?
             `;
             
             const [result] = await mysql.query(query, [request.params.id]);
@@ -133,6 +129,7 @@ module.exports = {
                     (?, ?, ?, ?, ?)`;
             
             const [result] = await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, batida]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 5, `O usuário ${decodedToken.nome} cadastrou a ração ${nome}`]);        
             return response.status(201).json({ message: 'Ração cadastrada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -150,6 +147,7 @@ module.exports = {
                 WHERE id = ?`;
 
             await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, batida, request.params.id]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 6, `O usuário ${decodedToken.nome} atualizaou a ração ${nome}`]);        
             return response.status(200).json({ message: 'Ração atualizada com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -179,7 +177,7 @@ module.exports = {
                 const [result] = await mysql.query(query, [id_racao, id_ingrediente, quantidade]);
                 insertIds.push(result.insertId);
             }
-    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 7, `O usuário ${decodedToken.nome} adicionou ingredinte(s) na fórmula da ração ${id_racao}`]);         
             return response.status(201).json({ message: 'Ingredientes inseridos na ração com sucesso!'});
         } catch (error) {
             console.error(error);
@@ -210,7 +208,7 @@ module.exports = {
     
                 await mysql.query(query, [quantidade, id_racao, id_ingrediente]);
             }
-    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 8, `O usuário ${decodedToken.nome} alterou a fórmula da ração ${id_racao}`]);         
             return response.status(200).json({ message: 'Ingredientes atualizados na ração com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -231,7 +229,7 @@ module.exports = {
                 WHERE id_racao = ? AND id_ingrediente = ?`;
     
             await mysql.query(query, [id_racao, id_ingrediente]);
-    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 9, `O usuário ${decodedToken.nome} deletou o ingrediente ${id_ingrediente} da fórmula da ração ${id_racao}`]);         
             return response.status(200).json({ message: 'Ingrediente removido da ração com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -252,6 +250,7 @@ module.exports = {
             const valor_total = quantidade * valor_unitario;
 
             const [result] = await mysql.query(query, [data_compra, id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 10, `O usuário ${decodedToken.nome} comprou a ração ${id_racao}`]);         
             return response.status(201).json({ message: 'Compra de ração realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -272,11 +271,30 @@ module.exports = {
                     (?, ?, ?, ?)`;
 
             const [result] = await mysql.query(query, [id_racao, new Date(), id_usuario, quantidade]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);         
             return response.status(201).json({ message: 'Produção de ração realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
     },
+
+    deleteRacao: async (request, response) => {
+        try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
+            const query = 
+                `DELETE FROM racoes
+                WHERE id = ?`;
+
+            await mysql.execute(query, [request.params.id]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id_usuario, 12, `O usuário ${decodedToken.nome} deletou a ração ${request.params.id}`]);        
+            return response.status(200).json({ message: 'Ingrediente deletado com sucesso!' });
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    }
     
 };

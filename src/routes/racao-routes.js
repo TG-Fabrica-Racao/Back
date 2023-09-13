@@ -1,28 +1,32 @@
 const express = require('express');
 const racaoController = require('../controllers/racao-controller');
+const login = require('../middlewares/login-middleware');
+const roles = require('../middlewares/roles-middleware');
 
 const router = express.Router();
 
-router.get('/historico-compras', racaoController.historicoCompras);
+router.get('/historico-compras', login.verifyToken, roles.adminRole, racaoController.historicoCompras);
 
-router.get('/historico-producao', racaoController.historicoProducao);
+router.get('/historico-producao', login.verifyToken, racaoController.historicoProducao);
 
-router.get('/', racaoController.getAllRacoes);
+router.get('/', login.verifyToken, racaoController.getAllRacoes);
 
-router.get('/:id', racaoController.getRacaoById);
+router.get('/:id', login.verifyToken, racaoController.getRacaoById);
 
-router.post('/create', racaoController.createRacao);
+router.post('/create', login.verifyToken, racaoController.createRacao);
 
-router.post('/inserir-ingredientes', racaoController.insertIngredienteInRacao);
+router.post('/inserir-ingredientes', login.verifyToken, racaoController.insertIngredienteInRacao);
 
-router.patch('/update-ingredientes', racaoController.updateIngredienteInRacao);
+router.patch('/update-ingredientes', login.verifyToken, racaoController.updateIngredienteInRacao);
 
-router.post('/comprar', racaoController.comprarRacao);
+router.delete('/delete-ingrediente', login.verifyToken, racaoController.deleteIngredienteFromRacao);
 
-router.post('/produzir', racaoController.produzirRacao);
+router.post('/comprar', login.verifyToken, roles.adminRole, racaoController.comprarRacao);
 
-router.patch('/update/:id', racaoController.updateRacao);
+router.post('/produzir', login.verifyToken, racaoController.produzirRacao);
 
-router.delete('/delete-ingrediente', racaoController.deleteIngredienteFromRacao);
+router.patch('/update/:id', login.verifyToken, racaoController.updateRacao);
+
+router.delete('/delete/:id', login.verifyToken, racaoController.deleteRacao)
 
 module.exports = router;

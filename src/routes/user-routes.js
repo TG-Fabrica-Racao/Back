@@ -5,26 +5,26 @@ const roles = require('../middlewares/roles-middleware');
 
 const router = express.Router();
 
-router.get('/logs', userController.getLogs);
+router.get('/logs', login.verifyToken, roles.adminRole, userController.getLogs);
 
-router.get('/', userController.getAllUser);
+router.get('/', login.verifyToken, roles.adminRole, userController.getAllUser);
 
-router.get('/:id', userController.getUserById);
+router.get('/:id', login.verifyToken, roles.adminRole, userController.getUserById);
 
-router.post('/create', userController.createUser);
+router.post('/create', login.verifyToken, roles.adminRole, userController.createUser);
 
 router.post('/login', userController.userLogin);
 
 router.post('/identify', userController.identifyUser);
 
-router.patch('/update', userController.updateUser);
+router.patch('/update', login.verifyToken, roles.adminRole, userController.updateUser);
 
-router.patch('/update-password/:id', userController.updatePassword);
+router.patch('/update-password/:id', login.verifyToken, userController.updatePassword);
 
-router.patch('/disable', userController.disableUser);
+router.patch('/disable', login.verifyToken, roles.adminRole, userController.disableUser);
 
-router.patch('/enable', userController.enableUser);
+router.patch('/enable', login.verifyToken, roles.adminRole, userController.enableUser);
 
-router.delete('/delete', userController.deleteUser);
+router.delete('/delete', login.verifyToken, roles.adminRole, userController.deleteUser);
 
 module.exports = router;
