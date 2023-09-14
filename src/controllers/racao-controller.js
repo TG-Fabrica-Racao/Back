@@ -32,11 +32,15 @@ module.exports = {
             }
     
             const query = `
-                SELECT
+                    SELECT
                     racoes.id,
                     racoes.nome,
                     categorias.nome AS categoria,
-                    racoes.tipo_racao,
+                    CASE
+                        WHEN racoes.tipo_racao = 0 THEN 'Produção própria'
+                        WHEN racoes.tipo_racao = 1 THEN 'Comprada'
+                        ELSE 'Desconhecido'
+                    END AS tipo_racao,
                     fases_granja.nome AS fase_utilizada,
                     racoes.batida,
                     IFNULL(
@@ -46,13 +50,13 @@ module.exports = {
                         ),
                         NULL
                     ) AS ingredientes
-                FROM racoes
-                LEFT JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
-                LEFT JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
-                INNER JOIN categorias ON racoes.id_categoria = categorias.id
-                INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
-                WHERE ${where}
-                GROUP BY racoes.id, racoes.nome, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida;
+                    FROM racoes
+                    LEFT JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
+                    LEFT JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
+                    INNER JOIN categorias ON racoes.id_categoria = categorias.id
+                    INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
+                    WHERE ${where}
+                    GROUP BY racoes.id, racoes.nome, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida;
             `;
     
             const [result] = await mysql.execute(query, params);
