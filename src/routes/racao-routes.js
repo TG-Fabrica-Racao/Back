@@ -17,10 +17,10 @@ router.get('/historico-producao', login.verifyToken, racaoController.historicoPr
 
 router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        id: Joi.number().integer().min(1).optional(),
-        nome: Joi.string().min(3).max(100).optional(),
-        categoria: Joi.string().min(3).max(100).optional(),
-        fase_utilizada: Joi.string().min(3).max(100).optional(),
+        id: Joi.number().integer().min(1).allow(null).optional(),
+        nome: Joi.string().min(3).max(100).allow(null).optional(),
+        categoria: Joi.string().min(3).max(100).allow(null).optional(),
+        fase_utilizada: Joi.string().min(3).max(100).allow(null).optional(),
     })
 }), racaoController.getAllRacoes);
 
