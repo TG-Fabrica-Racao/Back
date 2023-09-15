@@ -342,46 +342,24 @@ module.exports = {
             const { id_racao, quantidade } = request.body;
     
             const id_usuario = decodedToken.id_usuario;
-    
-            // Recupere a lista de ingredientes e suas quantidades associadas à ração
-            const query_ingredientes = `
-                SELECT id_ingrediente, quantidade
-                FROM ingrediente_racao
-                WHERE id_racao = ?;
-            `;
-            const [ingredientes] = await mysql.execute(query_ingredientes, [id_racao]);
-    
-            // Verifique o estoque e subtraia a quantidade necessária para cada ingrediente
-            for (const ingrediente of ingredientes) {
-                const { id_ingrediente, quantidade: quantidadeNaRacao } = ingrediente;
-    
-                // Consulte o estoque atual do ingrediente na tabela de estoque (supondo que você tenha uma tabela de estoque)
-                const [estoque] = await mysql.execute('SELECT quantidade FROM estoque WHERE id_ingrediente = ?', [id_ingrediente]);
-    
-                if (!estoque || estoque.length === 0 || estoque[0].quantidade < quantidadeNaRacao * quantidade) {
-                    return response.status(400).json({ message: 'Estoque insuficiente para a produção da ração.' });
-                }
-    
-                // Subtraia a quantidade necessária do estoque
-                const novaQuantidadeEstoque = estoque[0].quantidade - quantidadeNaRacao * quantidade;
-    
-                // Atualize o estoque na tabela de estoque
-                await mysql.execute('UPDATE estoque_atual SET quantidade = ? WHERE id_ingrediente = ?', [novaQuantidadeEstoque, id_ingrediente]);
+
+            const [batida] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
+
+            if (quantidade < batida) {
+                return response.status(400).json({ message: 'A quantidade a ser produzida não pode ser menor que a batida da ração' });
             }
     
-            // Após verificar e atualizar o estoque, insira o registro de produção na tabela producao_racao
-            const query_producao = `
+            const query = `
                 INSERT INTO  producao_racao
                     (id_racao, data_producao, id_usuario, quantidade)
                 VALUES
                     (?, ?, ?, ?)
             `;
-            const [result] = await mysql.query(query_producao, [id_racao, new Date(), id_usuario, quantidade]);
-    
-            // Registre a ação em registros
+
+            const [result] = await mysql.query(query, [id_racao, new Date(), id_usuario, quantidade]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);
     
-            return response.status(201).json({ message: 'Produção de ração realizada com sucesso!', id: result.insertId });
+            return response.status(201).json({ message: 'Produção de ração realizada com sucesso', id: result.insertId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });

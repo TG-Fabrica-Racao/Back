@@ -15,9 +15,9 @@ router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
 
 router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        id: Joi.number().integer().min(1),
-        nome: Joi.string().min(3).max(100),
-        nome_grupo: Joi.string().min(3).max(100)
+        id: Joi.number().integer().allow('').optional(),
+        nome: Joi.string().max(100).allow('').optional(),
+        nome_grupo: Joi.string().max(100).allow('').optional()
     })
 }), ingredienteController.getAllIngredientes);
 
@@ -34,8 +34,8 @@ router.post('/comprar', login.verifyToken, roles.adminRole, celebrate({
         data_compra: Joi.date().required(),
         id_ingrediente: Joi.number().integer().min(1).required(),
         quantidade_bruta: Joi.number().integer().min(1).required(),
-        pre_limpeza: Joi.number().integer().min(1).required(),
-        valor_unitario: Joi.number().integer().min(1).required(),
+        pre_limpeza: Joi.number().integer().required(),
+        valor_unitario: Joi.number().min(1).required(),
         numero_nota: Joi.string().min(3).max(100).required(),
         fornecedor: Joi.string().min(3).max(100).required()
     })

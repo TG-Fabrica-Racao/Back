@@ -136,9 +136,16 @@ module.exports = {
             const quantidade_liquida = quantidade_bruta - pre_limpeza;
             const valor_total = quantidade_bruta * valor_unitario;
 
+            const [estoque_atual] = await mysql.execute('SELECT estoque_atual FROM ingredientes WHERE id = ?', [id_ingrediente]);
+
+            if (!estoque_atual[0]) return response.status(404).json({ message: 'Ingrediente não encontrado' });
+
+            const novo_estoque = estoque_atual[0].estoque_atual + quantidade_liquida;
+            console.log(novo_estoque);
+            console.log(estoque_atual);
             const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
-            await mysql.execute('UPDATE ingredientes SET estoque_atual = estoque_atual + ? WHERE id = ?', [quantidade_liquida, id_ingrediente]);
+            await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_ingrediente]);
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);

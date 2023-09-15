@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS ingredientes (
     nome VARCHAR(50) NOT NULL,
     id_grupo INT NOT NULL,
     estoque_minimo FLOAT NOT NULL,
-    estoque_atual FLOAT,
+    estoque_atual DECIMAL(10, 2),
     PRIMARY KEY (id),
     FOREIGN KEY (id_grupo) REFERENCES grupos (id)
 );
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS racoes (
     id_categoria INT NOT NULL,
     tipo_racao BOOLEAN NOT NULL, -- 0 = Produção própria, 1 = Comprada
     fase_utilizada INT NOT NULL,
-    batida INT,
+    batida INT NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_categoria) REFERENCES categorias (id),
     FOREIGN KEY (fase_utilizada) REFERENCES fases_granja (id)

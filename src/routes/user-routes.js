@@ -16,11 +16,11 @@ router.get('/logs', login.verifyToken, roles.adminRole, celebrate({
 
 router.get('/', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        id: Joi.number().integer().min(1),
-        nome: Joi.string().min(3).max(100),
-        email: Joi.string().email().min(3).max(100),
-        telefone: Joi.string().min(3).max(20),
-        cargo: Joi.string().min(3).max(100),
+        id: Joi.number().integer().allow('').optional(),
+        nome: Joi.string().max(100).allow('').optional(),
+        email: Joi.string().email().max(100).allow('').optional(),
+        telefone: Joi.string().max(20).allow('').optional(),
+        cargo: Joi.string().max(100).allow('').optional()
     })
 }), userController.getAllUser);
 
