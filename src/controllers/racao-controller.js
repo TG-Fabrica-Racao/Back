@@ -69,26 +69,35 @@ module.exports = {
     
     historicoCompras: async (request, response) => {
         try {
-            const query = 
-                `SELECT
-                    compras_racao.id,
-                    compras_racao.data_compra,
-                    racoes.nome AS racao,
-                    compras_racao.quantidade,
-                    compras_racao.valor_unitario,
-                    compras_racao.valor_total,
-                    compras_racao.numero_nota,
-                    compras_racao.fornecedor
-                FROM compras_racao
-                INNER JOIN racoes ON compras_racao.id_racao = racoes.id;`;
-
-            const [result] = await mysql.query(query);
+            const { data_inicial, data_final } = request.query;
+    
+            let query = `
+                SELECT
+                    compras_ingrediente.id,
+                    compras_ingrediente.data_compra,
+                    ingredientes.nome AS ingrediente,
+                    compras_ingrediente.quantidade_bruta,
+                    compras_ingrediente.pre_limpeza,
+                    compras_ingrediente.quantidade_liquida,
+                    compras_ingrediente.valor_unitario,
+                    compras_ingrediente.valor_total,
+                    compras_ingrediente.numero_nota,
+                    compras_ingrediente.fornecedor
+                FROM compras_ingrediente
+                INNER JOIN ingredientes ON compras_ingrediente.id_ingrediente = ingredientes.id
+            `;
+        
+            if (data_inicial && data_final) {
+                query += ' WHERE compras_ingrediente.data_compra BETWEEN ? AND ?';
+            }
+    
+            const [result] = await mysql.execute(query, [data_inicial, data_final]);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },     
 
     historicoProducao: async (request, response) => {
         try {
@@ -184,11 +193,7 @@ module.exports = {
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
     
             const ingredientes = request.body;
-    
-            if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça uma matriz de ingredientes para inserir.' });
-            }
-    
+
             const idRacaoSet = new Set(ingredientes.map(ingrediente => ingrediente.id_racao));
             if (idRacaoSet.size !== 1) {
                 return response.status(400).json({ message: 'Todos os ingredientes devem pertencer à mesma ração.' });
@@ -292,10 +297,6 @@ module.exports = {
 
             const { id_racao, id_ingrediente } = request.body;
     
-            if (!id_racao || !id_ingrediente) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração e o id do ingrediente para remover.' });
-            }
-    
             const query =
                 `DELETE FROM ingrediente_racao
                 WHERE id_racao = ? AND id_ingrediente = ?`;
@@ -337,29 +338,55 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
+    
             const { id_racao, quantidade } = request.body;
-
+    
             const id_usuario = decodedToken.id_usuario;
-
-            if (!id_racao || !quantidade) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração e a quantidade a ser produzida.' });
+    
+            // Recupere a lista de ingredientes e suas quantidades associadas à ração
+            const query_ingredientes = `
+                SELECT id_ingrediente, quantidade
+                FROM ingrediente_racao
+                WHERE id_racao = ?;
+            `;
+            const [ingredientes] = await mysql.execute(query_ingredientes, [id_racao]);
+    
+            // Verifique o estoque e subtraia a quantidade necessária para cada ingrediente
+            for (const ingrediente of ingredientes) {
+                const { id_ingrediente, quantidade: quantidadeNaRacao } = ingrediente;
+    
+                // Consulte o estoque atual do ingrediente na tabela de estoque (supondo que você tenha uma tabela de estoque)
+                const [estoque] = await mysql.execute('SELECT quantidade FROM estoque WHERE id_ingrediente = ?', [id_ingrediente]);
+    
+                if (!estoque || estoque.length === 0 || estoque[0].quantidade < quantidadeNaRacao * quantidade) {
+                    return response.status(400).json({ message: 'Estoque insuficiente para a produção da ração.' });
+                }
+    
+                // Subtraia a quantidade necessária do estoque
+                const novaQuantidadeEstoque = estoque[0].quantidade - quantidadeNaRacao * quantidade;
+    
+                // Atualize o estoque na tabela de estoque
+                await mysql.execute('UPDATE estoque_atual SET quantidade = ? WHERE id_ingrediente = ?', [novaQuantidadeEstoque, id_ingrediente]);
             }
     
-            const query = `
+            // Após verificar e atualizar o estoque, insira o registro de produção na tabela producao_racao
+            const query_producao = `
                 INSERT INTO  producao_racao
                     (id_racao, data_producao, id_usuario, quantidade)
                 VALUES
-                    (?, ?, ?, ?)`;
-
-            const [result] = await mysql.query(query, [id_racao, new Date(), id_usuario, quantidade]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);         
+                    (?, ?, ?, ?)
+            `;
+            const [result] = await mysql.query(query_producao, [id_racao, new Date(), id_usuario, quantidade]);
+    
+            // Registre a ação em registros
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);
+    
             return response.status(201).json({ message: 'Produção de ração realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     deleteRacao: async (request, response) => {
         try {
@@ -369,10 +396,6 @@ module.exports = {
             const query = 
                 `DELETE FROM racoes
                 WHERE id = ?`;
-
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração para deletar a ração' });
-            }      
 
             const [result] = await mysql.execute(query, [request.params.id]);
 

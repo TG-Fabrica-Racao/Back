@@ -60,8 +60,10 @@ module.exports = {
 
     getLogs: async (request, response) => {
         try {
-            const query = 
-                `SELECT 
+            const { nome_usuario, data_inicial, data_final } = request.query;
+            
+            let query = `
+                SELECT 
                     registros.id, 
                     registros.data_registro, 
                     usuarios.id AS id_usuario, 
@@ -71,15 +73,34 @@ module.exports = {
                     registros.descricao
                 FROM registros 
                 INNER JOIN usuarios ON registros.id_usuario = usuarios.id
-                INNER JOIN acoes ON registros.id_acao = acoes.id`;
+                INNER JOIN acoes ON registros.id_acao = acoes.id
+            `;
             
-            const [result] = await mysql.execute(query);
+            const queryParams = [];
+            
+            if (nome_usuario) {
+                query += ' WHERE usuarios.nome = ?';
+                queryParams.push(nome_usuario);
+            }
+            
+            if (data_inicial && data_final) {
+                if (queryParams.length > 0) {
+                    query += ' AND ';
+                } else {
+                    query += ' WHERE ';
+                }
+                
+                query += 'registros.data_registro BETWEEN ? AND ?';
+                queryParams.push(data_inicial, data_final);
+            }
+            
+            const [result] = await mysql.execute(query, queryParams);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },        
 
     createUser: async (request, response) => {
         try {
@@ -189,10 +210,6 @@ module.exports = {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
     
-            if (!senha_nova) {
-                return response.status(400).json({ message: 'Senha nova não informada' });
-            }
-    
             if (senha_atual && result.length > 0 && result[0].senha) {
                 const senha_correta = await bcrypt.compare(senha_atual, result[0].senha);
     
@@ -206,9 +223,7 @@ module.exports = {
                 } else {
                     return response.status(401).json({ message: 'Senha atual incorreta' });
                 }
-            } else {
-                return response.status(400).json({ message: 'Senha atual não informada' });
-            }
+            } 
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });

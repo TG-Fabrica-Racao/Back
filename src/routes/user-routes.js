@@ -6,7 +6,13 @@ const { celebrate, Joi, errors, Segments } = require('celebrate');
 
 const router = express.Router();
 
-router.get('/logs', login.verifyToken, roles.adminRole, userController.getLogs);
+router.get('/logs', login.verifyToken, roles.adminRole, celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        nome_usuario: Joi.string().min(3).max(100),
+        data_inicial: Joi.date().iso().required(),
+        data_final: Joi.date().iso().required()
+    })
+}), userController.getLogs);
 
 router.get('/', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({

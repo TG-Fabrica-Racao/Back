@@ -6,16 +6,21 @@ const { celebrate, Joi, errors, Segments } = require('celebrate');
 
 const router = express.Router();
 
-router.get('/historico-compras', login.verifyToken, roles.adminRole, racaoController.historicoCompras);
+router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        data_inicial: Joi.date(),
+        data_final: Joi.date()
+    })
+}), racaoController.historicoCompras);
 
 router.get('/historico-producao', login.verifyToken, racaoController.historicoProducao);
 
 router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        id: Joi.number().integer().min(1),
-        nome: Joi.string().min(3).max(100),
-        categoria: Joi.string().min(3).max(100),
-        fase_utilizada: Joi.string().min(3).max(100),
+        id: Joi.number().integer().min(1).optional(),
+        nome: Joi.string().min(3).max(100).optional(),
+        categoria: Joi.string().min(3).max(100).optional(),
+        fase_utilizada: Joi.string().min(3).max(100).optional(),
     })
 }), racaoController.getAllRacoes);
 

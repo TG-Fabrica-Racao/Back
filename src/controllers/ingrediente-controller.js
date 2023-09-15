@@ -96,15 +96,15 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-            
+                
             const { nome, id_grupo, estoque_minimo } = request.body;
-
+    
             const query = 
                 `INSERT INTO ingredientes
                     (nome, id_grupo, estoque_minimo)
                 VALUES
                     (?, ?, ?)`;
-
+    
             const [result] = await mysql.execute(query, [nome, id_grupo, estoque_minimo]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 1, `O usuário ${decodedToken.nome} cadastrou o ingrediente ${nome}`]);
             return response.status(201).json({ message: 'Ingrediente cadastrado com sucesso!', id: result.insertId });
@@ -112,7 +112,7 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     comprarIngrediente: async (request, response) => {
         try {
@@ -158,10 +158,6 @@ module.exports = {
                     SET nome = ?, id_grupo = ?, estoque_minimo = ?
                 WHERE id = ?`;
 
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id do ingrediente' });
-            }
-
             await mysql.execute(query, [nome, id_grupo, estoque_minimo, request.params.id]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 2, `O usuário ${decodedToken.nome} atualizou o ingrediente ${nome}`]);
             return response.status(200).json({ message: 'Ingrediente atualizado com sucesso!' });
@@ -179,10 +175,6 @@ module.exports = {
             const query = 
                 `DELETE FROM ingredientes
                 WHERE id = ?`;
-
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id do ingrediente' });
-            }
 
             await mysql.execute(query, [request.params.id]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 3, `O usuário ${decodedToken.nome} deletou o ingrediente ${request.params.id}`]);        

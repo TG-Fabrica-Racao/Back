@@ -6,7 +6,12 @@ const { celebrate, Joi, errors, Segments } = require('celebrate');
 
 const router = express.Router();
 
-router.get('/historico-compras', login.verifyToken, roles.adminRole, ingredienteController.historicoCompras);
+router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        data_inicial: Joi.date(),
+        data_final: Joi.date()
+    })
+}), ingredienteController.historicoCompras);
 
 router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
