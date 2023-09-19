@@ -36,16 +36,14 @@ module.exports = {
                     racoes.id,
                     racoes.nome,
                     categorias.nome AS categoria,
-                    CASE
-                        WHEN racoes.tipo_racao = 0 THEN 'Produção própria'
-                        WHEN racoes.tipo_racao = 1 THEN 'Comprada'
-                        ELSE 'Desconhecido'
-                    END AS tipo_racao,
+                    racoes.tipo_racao,
                     fases_granja.nome AS fase_utilizada,
                     racoes.batida,
+                    racoes.estoque_minimo,
+                    racoes.estoque_atual,
                     IFNULL(
                         GROUP_CONCAT(
-                            CONCAT(ingredientes.id, ': ', ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')
+                            CONCAT('ID:', ingredientes.id, ' ' ,ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')
                             SEPARATOR ', '
                         ),
                         NULL
@@ -69,116 +67,225 @@ module.exports = {
     
     historicoCompras: async (request, response) => {
         try {
-            const { data_inicial, data_final } = request.query;
+            const { data_inicial, data_final, nome_racao } = request.query;
     
             let query = `
                 SELECT
-                    compras_ingrediente.id,
-                    compras_ingrediente.data_compra,
-                    ingredientes.nome AS ingrediente,
-                    compras_ingrediente.quantidade_bruta,
-                    compras_ingrediente.pre_limpeza,
-                    compras_ingrediente.quantidade_liquida,
-                    compras_ingrediente.valor_unitario,
-                    compras_ingrediente.valor_total,
-                    compras_ingrediente.numero_nota,
-                    compras_ingrediente.fornecedor
-                FROM compras_ingrediente
-                INNER JOIN ingredientes ON compras_ingrediente.id_ingrediente = ingredientes.id
+                    compras_racao.id,
+                    CONVERT_TZ(compras_racao.data_compra, 'UTC', 'America/Sao_Paulo') AS data_compra_brasilia,
+                    racoes.nome AS racao,
+                    compras_racao.quantidade,
+                    compras_racao.valor_unitario,
+                    compras_racao.valor_total,
+                    compras_racao.numero_nota,
+                    compras_racao.fornecedor
+                FROM compras_racao
+                INNER JOIN racoes ON compras_racao.id_racao = racoes.id
             `;
-        
+    
+            const params = [];
+    
             if (data_inicial && data_final) {
-                query += ' WHERE compras_ingrediente.data_compra BETWEEN ? AND ?';
+                query += ' WHERE CONVERT_TZ(compras_racao.data_compra, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
+                params.push(data_inicial, data_final);
+            } else if (data_inicial) {
+                query += ' WHERE CONVERT_TZ(compras_racao.data_compra, "UTC", "America/Sao_Paulo") >= ?';
+                params.push(data_inicial);
+            } else if (data_final) {
+                query += ' WHERE CONVERT_TZ(compras_racao.data_compra, "UTC", "America/Sao_Paulo") <= ?';
+                params.push(data_final);
             }
     
-            const [result] = await mysql.execute(query, [data_inicial, data_final]);
+            if (nome_racao) {
+                if (params.length > 0) {
+                    query += ' AND ';
+                } else {
+                    query += ' WHERE ';
+                }
+                query += 'racoes.nome LIKE ?';
+                params.push(`%${nome_racao}%`);
+            }
+    
+            const [result] = await mysql.execute(query, params);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },     
+    },           
 
     historicoProducao: async (request, response) => {
         try {
-            const query =   
-                `SELECT
+            const { data_inicial, data_final, nome_racao } = request.query;
+    
+            let query = `
+                SELECT
                     racoes.nome AS racao,
-                    producao_racao.data_producao AS data,
+                    CONVERT_TZ(producao_racao.data_producao, 'UTC', 'America/Sao_Paulo') AS data,
                     usuarios.nome AS usuario,
                     producao_racao.quantidade
                 FROM producao_racao
                 INNER JOIN racoes ON producao_racao.id_racao = racoes.id
-                INNER JOIN usuarios ON producao_racao.id_usuario = usuarios.id;`
-
-            const [result] = await mysql.query(query);
+                INNER JOIN usuarios ON producao_racao.id_usuario = usuarios.id
+            `;
+    
+            const params = [];
+    
+            if (data_inicial && data_final) {
+                query += ' WHERE CONVERT_TZ(producao_racao.data_producao, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
+                params.push(data_inicial, data_final);
+            } else if (data_inicial) {
+                query += ' WHERE CONVERT_TZ(producao_racao.data_producao, "UTC", "America/Sao_Paulo") >= ?';
+                params.push(data_inicial);
+            } else if (data_final) {
+                query += ' WHERE CONVERT_TZ(producao_racao.data_producao, "UTC", "America/Sao_Paulo") <= ?';
+                params.push(data_final);
+            }
+    
+            if (nome_racao) {
+                if (params.length > 0) {
+                    query += ' AND ';
+                } else {
+                    query += ' WHERE ';
+                }
+                query += 'racoes.nome LIKE ?';
+                params.push(`%${nome_racao}%`);
+            }
+    
+            const [result] = await mysql.query(query, params);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
-
+    },    
+    
+    historicoAcertoEstoque: async (request, response) => {
+        try {
+            const { data_inicial, data_final, nome_racao } = request.query;
+    
+            let query = `
+                SELECT 
+                    racoes.nome AS racao,
+                    CONVERT_TZ(acerto_estoque.data_acerto, 'UTC', 'America/Sao_Paulo') AS data_acerto_brasilia,
+                    usuarios.nome AS usuario,
+                    acerto_estoque.quantidade
+                FROM acerto_estoque
+                INNER JOIN racoes ON acerto_estoque.id_racao = racoes.id
+                INNER JOIN usuarios ON acerto_estoque.id_usuario = usuarios.id
+            `;
+    
+            const params = [];
+    
+            if (data_inicial && data_final) {
+                query += ' WHERE CONVERT_TZ(acerto_estoque.data_acerto, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
+                params.push(data_inicial, data_final);
+            } else if (data_inicial) {
+                query += ' WHERE CONVERT_TZ(acerto_estoque.data_acerto, "UTC", "America/Sao_Paulo") >= ?';
+                params.push(data_inicial);
+            } else if (data_final) {
+                query += ' WHERE CONVERT_TZ(acerto_estoque.data_acerto, "UTC", "America/Sao_Paulo") <= ?';
+                params.push(data_final);
+            }
+    
+            if (nome_racao) {
+                if (params.length > 0) {
+                    query += ' AND ';
+                } else {
+                    query += ' WHERE ';
+                }
+                query += 'racoes.nome LIKE ?';
+                params.push(`%${nome_racao}%`);
+            }
+    
+            const [result] = await mysql.query(query, params);
+            return response.status(200).json(result);
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    },        
+    
     createRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
             
-            const { nome, id_categoria, tipo_racao, fase_utilizada, batida, ingredientes } = request.body;
+            const { nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo, ingredientes } = request.body;
     
-            const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
-    
-            if (soma_quantidades !== batida) {
-                return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
-            }
-    
-            const racao_query =
-                `INSERT INTO racoes
-                    (nome, id_categoria, tipo_racao, fase_utilizada, batida)
-                VALUES
-                    (?, ?, ?, ?, ?)`;
-    
-            const [result] = await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, batida]);
-            const racao_id = result.insertId;
-    
-            if (Array.isArray(ingredientes) && ingredientes.length > 0) {
-                const insert_ingrediente =
-                    `INSERT INTO ingrediente_racao
-                        (id_racao, id_ingrediente, quantidade)
+            if (tipo_racao === "Comprada") {
+                const racao_query =
+                    `INSERT INTO racoes
+                        (nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo)
                     VALUES
-                        (?, ?, ?)`;
-    
-                for (const ingrediente of ingredientes) {
-                    const { id_ingrediente, quantidade } = ingrediente;
-                    await mysql.query(insert_ingrediente, [racao_id, id_ingrediente, quantidade]);
+                        (?, ?, ?, ?, ?)`;
+        
+                await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo]);
+            } else {
+                const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
+        
+                if (soma_quantidades !== batida) {
+                    return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
+                }
+        
+                const racao_query =
+                    `INSERT INTO racoes
+                        (nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo)
+                    VALUES
+                        (?, ?, ?, ?, ?, ?)`;
+        
+                const [result] = await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo]);
+                const racao_id = result.insertId;
+        
+                if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+                    const insert_ingrediente =
+                        `INSERT INTO ingrediente_racao
+                            (id_racao, id_ingrediente, quantidade)
+                        VALUES
+                            (?, ?, ?)`;
+        
+                    for (const ingrediente of ingredientes) {
+                        const { id_ingrediente, quantidade } = ingrediente;
+                        await mysql.query(insert_ingrediente, [racao_id, id_ingrediente, quantidade]);
+                    }
                 }
             }
     
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 5, `O usuário ${decodedToken.nome} cadastrou a ração ${nome}`]);        
-            return response.status(201).json({ message: 'Ração cadastrada com sucesso!', id: racao_id });
+            return response.status(201).json({ message: 'Ração cadastrada com sucesso!' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
     
     updateRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
-            const { nome, id_categoria, tipo_racao, fase_utilizada, batida } = request.body;
+            const { nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo } = request.body;
 
-            const query =
+            if (tipo_racao === "Comprada") {
+                const query =
+                    `UPDATE racoes
+                        SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?, estoque_minimo = ?
+                    WHERE id = ?`;
+    
+                await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, request.params.id]);
+            } else {
+                const query =
                 `UPDATE racoes
                     SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?, batida = ?
                 WHERE id = ?`;
 
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração' });
-            }
+                if (!request.params.id) {
+                    return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração' });
+                }
 
-            await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, batida, request.params.id]);
+                await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, batida, request.params.id]);
+            }
+            
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `O usuário ${decodedToken.nome} atualizaou a ração ${nome}`]);        
             return response.status(200).json({ message: 'Ração atualizada com sucesso!' });
         } catch (error) {
@@ -225,7 +332,6 @@ module.exports = {
             }
     
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 7, `O usuário ${decodedToken.nome} adicionou ingrediente(s) na fórmula da ração ${id_racao}`]);
-    
             return response.status(201).json({ message: 'Ingredientes inseridos na ração com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -315,17 +421,34 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
-            const { data_compra, id_racao, quantidade, valor_unitario, numero_nota, fornecedor } = request.body;
+            const { id_racao, 
+                    quantidade, 
+                    valor_unitario, 
+                    numero_nota, 
+                    fornecedor } = request.body;
+
+            const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
+
+            if (!racao) {
+                return response.status(404).json({ message: 'Ração não encontrada' });
+            }
+            
+            if (racao[0].tipo_racao === 'Produção própria') {
+                return response.status(400).json({ message: 'Essa ração é apenas produzida, portanto não pode ser comprada' });
+            }
 
             const query =
                 `INSERT INTO compras_racao
                     (data_compra, id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor)
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?)`;
+                    (NOW(), ?, ?, ?, ?, ?, ?)`;
 
             const valor_total = quantidade * valor_unitario;
 
-            const [result] = await mysql.query(query, [data_compra, id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor]);
+            const novo_estoque = racao[0].estoque_atual + quantidade;
+
+            const [result] = await mysql.query(query, [id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor]);
+            await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_racao]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 10, `O usuário ${decodedToken.nome} comprou a ração ${id_racao}`]);         
             return response.status(201).json({ message: 'Compra de ração realizada com sucesso!', id: result.insertId });
         } catch (error) {
@@ -338,33 +461,71 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-    
+            
+            const id_usuario = decodedToken.id;
+            
             const { id_racao, quantidade } = request.body;
     
-            const id_usuario = decodedToken.id_usuario;
+            const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
 
-            const [batida] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
-
-            if (quantidade < batida) {
-                return response.status(400).json({ message: 'A quantidade a ser produzida não pode ser menor que a batida da ração' });
+            if (!racao) {
+                return response.status(404).json({ message: 'Ração não encontrada' });
+            }
+    
+            if (racao[0].tipo_racao === 'Comprada') {
+                return response.status(400).json({ message: 'Essa ração é apenas comprada, portanto não pode ser produzida' });
             }
     
             const query = `
                 INSERT INTO  producao_racao
                     (id_racao, data_producao, id_usuario, quantidade)
                 VALUES
-                    (?, ?, ?, ?)
+                    (?, NOW(), ?, ?)
             `;
 
-            const [result] = await mysql.query(query, [id_racao, new Date(), id_usuario, quantidade]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);
+            const novo_estoque = racao[0].estoque_atual + quantidade;
     
+            const [result] = await mysql.query(query, [id_racao, id_usuario, quantidade]);
+            await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_racao]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [id_usuario, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);
             return response.status(201).json({ message: 'Produção de ração realizada com sucesso', id: result.insertId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },
+    
+    acertarEstoque: async (request, response) => {
+        try {
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+
+            const id_usuario = decodedToken.id;
+
+            const { id_racao, quantidade } = request.body;
+
+            const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
+
+            if (!racao) {
+                return response.status(404).json({ message: 'Ração não encontrada' });
+            }
+
+            const query = `
+                INSERT INTO acerto_estoque
+                    (id_racao, data_acerto, id_usuario, quantidade)
+                VALUES
+                    (?, NOW(), ?, ?)
+            `;
+
+            const [result] = await mysql.execute(query, [id_racao, id_usuario, quantidade]);
+            await mysql.execute('UPDATE racoes SET estoque_atual = (estoque_atual - ?) WHERE id = ?', [quantidade, id_racao]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 12, `O usuário ${decodedToken.nome} realizou um acerto de estoque da ração ${id_racao}`]);
+            return response.status(201).json({ message: 'Acerto de estoque realizado com sucesso!', id: result.insertId });
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    },
 
     deleteRacao: async (request, response) => {
         try {
@@ -381,7 +542,7 @@ module.exports = {
                 return response.status(404).json({ message: 'Ração não encontrada' });
             }
 
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 12, `O usuário ${decodedToken.nome} deletou a ração ${request.params.id}`]);        
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 13, `O usuário ${decodedToken.nome} deletou a ração ${request.params.id}`]);        
             return response.status(200).json({ message: 'Ingrediente deletado com sucesso!' });
         } catch (error) {
             console.error(error);

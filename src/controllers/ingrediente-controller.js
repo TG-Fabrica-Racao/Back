@@ -57,12 +57,12 @@ module.exports = {
 
     historicoCompras: async (request, response) => {
         try {
-            const { data_inicial, data_final } = request.query;
+            const { data_inicial, data_final, nome_ingrediente } = request.query;
     
             let query = `
                 SELECT
                     compras_ingrediente.id,
-                    compras_ingrediente.data_compra,
+                    CONVERT_TZ(compras_ingrediente.data_compra, 'UTC', 'America/Sao_Paulo') AS data_compra_brasilia,
                     ingredientes.nome AS ingrediente,
                     compras_ingrediente.quantidade_bruta,
                     compras_ingrediente.pre_limpeza,
@@ -75,22 +75,36 @@ module.exports = {
                 INNER JOIN ingredientes ON compras_ingrediente.id_ingrediente = ingredientes.id
             `;
     
-            if (data_inicial && data_final) {
-                query += `
-                    WHERE compras_ingrediente.data_compra BETWEEN ? AND ?;
-                `;
+            const params = [];
     
-                const [result] = await mysql.execute(query, [data_inicial, data_final]);
-                return response.status(200).json(result);
-            } else {
-                const [result] = await mysql.execute(query);
-                return response.status(200).json(result);
+            if (data_inicial && data_final) {
+                query += ' WHERE CONVERT_TZ(compras_ingrediente.data_compra, "+00:00", "America/Sao_Paulo") BETWEEN ? AND ?';
+                params.push(data_inicial, data_final);
+            } else if (data_inicial) {
+                query += ' WHERE CONVERT_TZ(compras_ingrediente.data_compra, "+00:00", "America/Sao_Paulo") >= ?';
+                params.push(data_inicial);
+            } else if (data_final) {
+                query += ' WHERE CONVERT_TZ(compras_ingrediente.data_compra, "+00:00", "America/Sao_Paulo") <= ?';
+                params.push(data_final);
             }
+    
+            if (nome_ingrediente) {
+                if (params.length > 0) {
+                    query += ' AND ';
+                } else {
+                    query += ' WHERE ';
+                }
+                query += 'ingredientes.nome LIKE ?';
+                params.push(`%${nome_ingrediente}%`);
+            }
+    
+            const [result] = await mysql.execute(query, params);
+            return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },                     
     
     createIngrediente: async (request, response) => {
         try {
@@ -119,8 +133,7 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
-            const { data_compra, 
-                    id_ingrediente, 
+            const { id_ingrediente, 
                     quantidade_bruta, 
                     pre_limpeza, 
                     valor_unitario, 
@@ -131,19 +144,22 @@ module.exports = {
                 `INSERT INTO compras_ingrediente
                     (data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor)
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)`;
             
             const quantidade_liquida = quantidade_bruta - pre_limpeza;
             const valor_total = quantidade_bruta * valor_unitario;
 
-            const [estoque_atual] = await mysql.execute('SELECT estoque_atual FROM ingredientes WHERE id = ?', [id_ingrediente]);
+            const [ingrediente] = await mysql.execute('SELECT estoque_atual FROM ingredientes WHERE id = ?', [id_ingrediente]);
 
-            if (!estoque_atual[0]) return response.status(404).json({ message: 'Ingrediente não encontrado' });
+            if (!ingrediente) {
+                return response.status(404).json({ message: 'Ingrediente não encontrado' });
+            }
 
-            const novo_estoque = estoque_atual[0].estoque_atual + quantidade_liquida;
-            console.log(novo_estoque);
-            console.log(estoque_atual);
-            const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
+            const novo_estoque = ingrediente[0].estoque_atual + quantidade_liquida;
+
+            console.log(novo_estoque, ingrediente[0].estoque_atual, quantidade_liquida);
+
+            const [result] = await mysql.execute(query, [id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_ingrediente]);
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });

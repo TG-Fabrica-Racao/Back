@@ -65,7 +65,7 @@ module.exports = {
             let query = `
                 SELECT 
                     registros.id, 
-                    registros.data_registro, 
+                    CONVERT_TZ(registros.data_registro, 'UTC', 'America/Sao_Paulo') AS data_registro_brasilia,
                     usuarios.id AS id_usuario, 
                     usuarios.nome AS usuario,
                     acoes.id AS id_acao,
@@ -90,7 +90,7 @@ module.exports = {
                     query += ' WHERE ';
                 }
                 
-                query += 'registros.data_registro BETWEEN ? AND ?';
+                query += 'CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
                 queryParams.push(data_inicial, data_final);
             }
             
@@ -100,7 +100,7 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },        
+    },            
 
     createUser: async (request, response) => {
         try {

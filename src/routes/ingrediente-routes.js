@@ -9,7 +9,8 @@ const router = express.Router();
 router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         data_inicial: Joi.date(),
-        data_final: Joi.date()
+        data_final: Joi.date(),
+        nome_ingrediente: Joi.string().max(100).allow('').optional(),
     })
 }), ingredienteController.historicoCompras);
 

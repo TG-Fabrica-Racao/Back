@@ -53,9 +53,9 @@ CREATE TABLE IF NOT EXISTS usuarios (
 	id INT AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
     email VARCHAR(50) NOT NULL,
-    telefone VARCHAR(20) NOT NULL,
     senha VARCHAR(100) NOT NULL,
-    status_usuario BOOLEAN NOT NULL, -- 0 = Inativo, 1 = Ativo
+    telefone VARCHAR(20) NOT NULL,
+    status_usuario ENUM ('Ativo', 'Inativo') NOT NULL,
     cargo ENUM ('Administrador', 'Funcionário') NOT NULL,
     PRIMARY KEY (id)
 );
@@ -64,19 +64,21 @@ CREATE TABLE IF NOT EXISTS ingredientes (
 	id INT AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
     id_grupo INT NOT NULL,
-    estoque_minimo FLOAT NOT NULL,
+    estoque_minimo DECIMAL(10, 2) NOT NULL,
     estoque_atual DECIMAL(10, 2),
     PRIMARY KEY (id),
     FOREIGN KEY (id_grupo) REFERENCES grupos (id)
 );
 
 CREATE TABLE IF NOT EXISTS racoes (
-	id INT AUTO_INCREMENT,
+    id INT AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
     id_categoria INT NOT NULL,
-    tipo_racao BOOLEAN NOT NULL, -- 0 = Produção própria, 1 = Comprada
+    tipo_racao ENUM ('Produção própria', 'Comprada', 'Ambos') NOT NULL, 
     fase_utilizada INT NOT NULL,
-    batida INT NOT NULL,
+    batida DECIMAL(10,2),
+    estoque_minimo DECIMAL(10,2) NOT NULL,
+    estoque_atual DECIMAL(10,2),
     PRIMARY KEY (id),
     FOREIGN KEY (id_categoria) REFERENCES categorias (id),
     FOREIGN KEY (fase_utilizada) REFERENCES fases_granja (id)
@@ -85,20 +87,20 @@ CREATE TABLE IF NOT EXISTS racoes (
 CREATE TABLE IF NOT EXISTS ingrediente_racao (
     id_ingrediente INT NOT NULL,
     id_racao INT NOT NULL,
-    quantidade INT NOT NULL,
+    quantidade DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id)
 );
 
 CREATE TABLE IF NOT EXISTS compras_ingrediente (
 	id INT AUTO_INCREMENT,
-    data_compra DATE NOT NULL,
+    data_compra DATETIME NOT NULL,
     id_ingrediente INT NOT NULL,
-    quantidade_bruta FLOAT NOT NULL,
-    pre_limpeza FLOAT NOT NULL,
-    quantidade_liquida FLOAT NOT NULL,
-    valor_unitario FLOAT NOT NULL,
-    valor_total FLOAT NOT NULL,
+    quantidade_bruta DECIMAL(10,2) NOT NULL,
+    pre_limpeza DECIMAL(10,2) NOT NULL,
+    quantidade_liquida DECIMAL(10,2) NOT NULL,
+    valor_unitario DECIMAL(10,2) NOT NULL,
+    valor_total DECIMAL(10,2) NOT NULL,
     numero_nota VARCHAR(50) NOT NULL,
     fornecedor VARCHAR(50) NOT NULL,
     PRIMARY KEY (id),
@@ -107,11 +109,11 @@ CREATE TABLE IF NOT EXISTS compras_ingrediente (
 
 CREATE TABLE IF NOT EXISTS compras_racao (
 	id INT AUTO_INCREMENT,
-    data_compra DATE NOT NULL,
+    data_compra DATETIME NOT NULL,
     id_racao INT NOT NULL,
-    quantidade INT NOT NULL,
-    valor_unitario FLOAT NOT NULL,
-    valor_total FLOAT NOT NULL,
+    quantidade DECIMAL(10,2) NULL,
+    valor_unitario DECIMAL(10,2) NOT NULL,
+    valor_total DECIMAL(10,2) NOT NULL,
     numero_nota VARCHAR(50) NOT NULL,
     fornecedor VARCHAR(50) NOT NULL,
     PRIMARY KEY (id),
@@ -123,7 +125,18 @@ CREATE TABLE IF NOT EXISTS producao_racao (
     id_racao INT NOT NULL,
     data_producao DATETIME NOT NULL,
     id_usuario INT NOT NULL,
-    quantidade FLOAT NOT NULL,
+    quantidade DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id_racao) REFERENCES racoes (id),
+    FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
+);
+
+CREATE TABLE IF NOT EXISTS acerto_estoque (
+    id INT AUTO_INCREMENT,
+    id_racao INT NOT NULL,
+    data_acerto DATETIME NOT NULL,
+    id_usuario INT NOT NULL,
+    quantidade DECIMAL(10,2) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id),
     FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
@@ -144,17 +157,17 @@ INSERT INTO acoes (nome) VALUES ('Comprar ingrediente');
 /* Todas as ações possíveis - Rações */
 INSERT INTO acoes (nome) VALUES ('Cadastrar ração');
 INSERT INTO acoes (nome) VALUES ('Atualizar ração');
-INSERT INTO acoes (nome) VALUES ('Adicionar ingrediente na fórmula da ração');
-INSERT INTO acoes (nome) VALUES ('Atualizar ingrediente na fórmula da ração');
-INSERT INTO acoes (nome) VALUES ('Deletar ingrediente na fórmula da ração');
+INSERT INTO acoes (nome) VALUES ('Adicionar ingredientes na fórmula da ração');
+INSERT INTO acoes (nome) VALUES ('Atualizar ingredientes na fórmula da ração');
+INSERT INTO acoes (nome) VALUES ('Deletar ingrediente da fórmula da ração');
 INSERT INTO acoes (nome) VALUES ('Comprar ração');
 INSERT INTO acoes (nome) VALUES ('Produzir ração');
+INSERT INTO acoes (nome) VALUES ('Acertar estoque da ração');
 INSERT INTO acoes (nome) VALUES ('Deletar ração');
-
 
 CREATE TABLE IF NOT EXISTS registros (
     id BIGINT AUTO_INCREMENT,
-    data_registro DATE NOT NULL,
+    data_registro DATETIME NOT NULL,
     id_usuario INT NOT NULL,
     id_acao INT NOT NULL,
     descricao VARCHAR(100) NOT NULL,
