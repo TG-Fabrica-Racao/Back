@@ -8,7 +8,8 @@ const router = express.Router();
 
 router.get('/logs', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        nome_usuario: Joi.string().min(3).max(100),
+        nome_usuario: Joi.string().max(100).allow('').optional(),
+        data: Joi.date().iso(),
         data_inicial: Joi.date().iso(),
         data_final: Joi.date().iso()
     })
@@ -40,11 +41,7 @@ router.post('/login', celebrate({
     })
 }), userController.userLogin);
 
-router.post('/identify', celebrate({
-    [Segments.HEADERS]: Joi.object({
-        authorization: Joi.string().required()
-    })
-}), userController.identifyUser);
+router.post('/identify', userController.identifyUser);
 
 router.patch('/update/:id', login.verifyToken, roles.adminRole, celebrate({
     [Segments.PARAMS]: Joi.object({
@@ -59,11 +56,13 @@ router.patch('/update/:id', login.verifyToken, roles.adminRole, celebrate({
     })
 }), userController.updateUser);
 
-router.patch('/update-password', login.verifyToken, celebrate({
+router.patch('/forgot-password', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
         email: Joi.string().email().min(3).max(100).required(),
     })
-}), userController.updatePassword);
+}), userController.forgotPassword);
+
+router.patch('/update-password', login.verifyToken, roles.adminRole, userController.updatePassword)
 
 router.patch('/disable/:id', login.verifyToken, roles.adminRole, celebrate({
     [Segments.PARAMS]: Joi.object({

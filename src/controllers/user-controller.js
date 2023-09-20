@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const mailer = require('../modules/mailer');
+const { response } = require('express');
 require('dotenv').config();
 
 module.exports = {
@@ -63,8 +64,8 @@ module.exports = {
 
     getLogs: async (request, response) => {
         try {
-            const { nome_usuario, data_inicial, data_final } = request.query;
-            
+            const { nome_usuario, data, data_inicial, data_final } = request.query;
+    
             let query = `
                 SELECT 
                     registros.id, 
@@ -78,32 +79,37 @@ module.exports = {
                 INNER JOIN usuarios ON registros.id_usuario = usuarios.id
                 INNER JOIN acoes ON registros.id_acao = acoes.id
             `;
-            
-            const queryParams = [];
-            
+    
+            const params = [];
+    
             if (nome_usuario) {
                 query += ' WHERE usuarios.nome = ?';
-                queryParams.push(nome_usuario);
+                params.push(nome_usuario);
             }
-            
+    
+            if (data) {
+                query += ' AND DATE(CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo")) = DATE(?)';
+                params.push(data);
+            }
+    
             if (data_inicial && data_final) {
-                if (queryParams.length > 0) {
-                    query += ' AND ';
-                } else {
-                    query += ' WHERE ';
-                }
-                
-                query += 'CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
-                queryParams.push(data_inicial, data_final);
+                query += ' AND CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
+                params.push(data_inicial, data_final);
+            } else if (data_inicial) {
+                query += ' AND CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") >= ?';
+                params.push(data_inicial);
+            } else if (data_final) {
+                query += ' AND CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") <= ?';
+                params.push(data_final);
             }
-            
-            const [result] = await mysql.execute(query, queryParams);
+    
+            const [result] = await mysql.execute(query, params);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },            
+    },               
 
     createUser: async (request, response) => {
         try {
@@ -197,11 +203,11 @@ module.exports = {
         }
     },
 
-    updatePassword: async (request, response) => {
+    forgotPassword: async (request, response) => {
         try {
-            const { email, senha_atual, senha_nova } = request.body;
+            const { email } = request.body;
     
-            const [result] = await mysql.execute('SELECT senha FROM usuarios WHERE email = ?', [email]);
+            const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
     
             if (!result || result.length === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
@@ -218,7 +224,7 @@ module.exports = {
                 from: process.env.MAILER_USER,
                 to: email,
                 subject: 'Recuperação de senha',
-                text: `Olá, ${email}, utilize o token ${token} para recuperar sua senha`,
+                text: `Olá, ${result[0].nome}, utilize o token ${token} para recuperar sua senha`,
             }, (error) => {
                 if (error) {
                     console.error(error);
@@ -226,13 +232,43 @@ module.exports = {
                 } else {
                     return response.status(200).json({ message: 'E-mail enviado com sucesso' });
                 }
-            })
+            });
 
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },  
+    
+    updatePassword: async (request, response) => {
+        try {
+            const { email, token, senha } = request.body;
+
+            const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
+
+            if (!result || result.length === 0) {
+                return response.status(404).json({ message: 'Usuário não encontrado' });
+            }
+
+            if (token !== result[0].passwordResetToken) {
+                return response.status(401).json({ message: 'Token inválido' });
+            }
+
+            const now = new Date();
+
+            if (now > result[0].passwordResetExpires) {
+                return response.status(401).json({ message: 'Token expirado' });
+            }
+
+            const senhaHash = await bcrypt.hash(senha, 10);
+
+            await mysql.execute('UPDATE usuarios SET senha = ? WHERE email = ?', [senhaHash, email]);
+            return response.status(200).json({ message: 'Senha atualizada com sucesso' });
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    },
 
     updateUser: async (request, response) => {
         try {
