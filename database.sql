@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     telefone VARCHAR(20) NOT NULL,
     status_usuario ENUM ('Ativo', 'Inativo') NOT NULL,
     cargo ENUM ('Administrador', 'Funcionário') NOT NULL,
+    passwordResetToken VARCHAR(100),
+    passwordResetExpires DATETIME,
     PRIMARY KEY (id)
 );
 

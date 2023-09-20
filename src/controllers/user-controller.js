@@ -1,6 +1,9 @@
 const mysql = require('../connection');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const mailer = require('../modules/mailer');
+require('dotenv').config();
 
 module.exports = {
 
@@ -162,12 +165,6 @@ module.exports = {
 
             return response.status(200).json({ 
                 message: 'Autenticado com sucesso', 
-                id: user.id,
-                nome: user.nome,
-                email: user.email,
-                telefone: user.telefone,
-                status_usuario: user.status_usuario,
-                cargo: user.cargo,
                 token 
             });
         } catch (error) {
@@ -202,28 +199,35 @@ module.exports = {
 
     updatePassword: async (request, response) => {
         try {
-            const { senha_atual, senha_nova } = request.body;
+            const { email, senha_atual, senha_nova } = request.body;
     
-            const [result] = await mysql.execute('SELECT senha FROM usuarios WHERE id = ?', [request.params.id]);
+            const [result] = await mysql.execute('SELECT senha FROM usuarios WHERE email = ?', [email]);
     
             if (!result || result.length === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
-    
-            if (senha_atual && result.length > 0 && result[0].senha) {
-                const senha_correta = await bcrypt.compare(senha_atual, result[0].senha);
-    
-                if (senha_correta) {
-                    const senha_hash = await bcrypt.hash(senha_nova, 10);
-    
-                    const query = 'UPDATE usuarios SET senha = ? WHERE id = ?';
-                    await mysql.execute(query, [senha_hash, request.params.id]);
-    
-                    return response.status(200).json({ message: 'Senha atualizada com sucesso' });
+            
+            const token = crypto.randomBytes(20).toString('hex');
+
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+
+            await mysql.execute('UPDATE usuarios SET passwordResetToken = ?, passwordResetExpires = ? WHERE email = ?', [token, now, email]);
+
+            mailer.sendMail({
+                from: process.env.MAILER_USER,
+                to: email,
+                subject: 'Recuperação de senha',
+                text: `Olá, ${email}, utilize o token ${token} para recuperar sua senha`,
+            }, (error) => {
+                if (error) {
+                    console.error(error);
+                    return response.status(500).json({ message: 'Erro ao enviar o e-mail de recuperação de senha' });
                 } else {
-                    return response.status(401).json({ message: 'Senha atual incorreta' });
+                    return response.status(200).json({ message: 'E-mail enviado com sucesso' });
                 }
-            } 
+            })
+
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });

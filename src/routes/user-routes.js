@@ -18,13 +18,13 @@ router.get('/', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         id: Joi.number().integer().allow('').optional(),
         nome: Joi.string().max(100).allow('').optional(),
-        email: Joi.string().email().max(100).allow('').optional(),
+        email: Joi.string().max(100).allow('').optional(),
         telefone: Joi.string().max(20).allow('').optional(),
         cargo: Joi.string().max(100).allow('').optional()
     })
 }), userController.getAllUser);
 
-router.post('/create', login.verifyToken, roles.adminRole, celebrate({
+router.post('/create', celebrate({
     [Segments.BODY]: Joi.object().keys({
         nome: Joi.string().min(3).max(100).required(),
         email: Joi.string().email().min(3).max(100).required(),
@@ -59,13 +59,9 @@ router.patch('/update/:id', login.verifyToken, roles.adminRole, celebrate({
     })
 }), userController.updateUser);
 
-router.patch('/update-password/:id', login.verifyToken, celebrate({
-    [Segments.PARAMS]: Joi.object({
-        id: Joi.number().integer().min(1).required()
-    }),
+router.patch('/update-password', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
-        senha_atual: Joi.string().min(3).max(100).required(),
-        senha_nova: Joi.string().min(3).max(100).required()
+        email: Joi.string().email().min(3).max(100).required(),
     })
 }), userController.updatePassword);
 
