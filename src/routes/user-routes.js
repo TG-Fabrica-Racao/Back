@@ -56,13 +56,21 @@ router.patch('/update/:id', login.verifyToken, roles.adminRole, celebrate({
     })
 }), userController.updateUser);
 
-router.patch('/forgot-password', login.verifyToken, celebrate({
+// router.patch('/forgot-password', login.verifyToken, celebrate({
+//     [Segments.BODY]: Joi.object().keys({
+//         email: Joi.string().email().min(3).max(100).required(),
+//     })
+// }), userController.forgotPassword);
+
+// router.patch('/update-password', login.verifyToken, roles.adminRole, userController.updatePassword)
+
+router.patch('/update-password', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
         email: Joi.string().email().min(3).max(100).required(),
+        senha_atual: Joi.string().min(3).max(100).required(),
+        nova_senha: Joi.string().min(3).max(100).required()
     })
-}), userController.forgotPassword);
-
-router.patch('/update-password', login.verifyToken, roles.adminRole, userController.updatePassword)
+}), userController.updatePassword) 
 
 router.patch('/disable/:id', login.verifyToken, roles.adminRole, celebrate({
     [Segments.PARAMS]: Joi.object({

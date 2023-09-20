@@ -1,16 +1,13 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config();
+// const nodemailer = require('nodemailer');
+// require('dotenv').config();
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    type: 'OAuth2',
-    user: process.env.MAILER_USER, 
-    clientId: process.env.MAILER_CLIENT_ID,
-    clientSecret: process.env.MAILER_CLIENT_SECRET,
-    refreshToken: process.env.MAILER_REFRESH_TOKEN,
-    accessToken: process.env.MAILER_ACCESS_TOKEN
-  },
-});
+// const transporter = nodemailer.createTransport({
+//   host: process.env.MAILER_HOST,
+//   port: process.env.MAILER_PORT,
+//   auth: {
+//     user: process.env.MAILER_USER,
+//     pass: process.env.MAILER_PASS
+//   }
+// });
 
-module.exports = transporter;
+// module.exports = transporter;

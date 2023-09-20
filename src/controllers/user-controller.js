@@ -1,9 +1,8 @@
 const mysql = require('../connection');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const mailer = require('../modules/mailer');
-const { response } = require('express');
+// const crypto = require('crypto');
+// const mailer = require('../modules/mailer');
 require('dotenv').config();
 
 module.exports = {
@@ -203,72 +202,108 @@ module.exports = {
         }
     },
 
-    forgotPassword: async (request, response) => {
-        try {
-            const { email } = request.body;
+    // forgotPassword: async (request, response) => {
+    //     try {
+    //         const { email } = request.body;
     
-            const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
+    //         const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
     
-            if (!result || result.length === 0) {
-                return response.status(404).json({ message: 'Usuário não encontrado' });
-            }
+    //         if (!result || result.length === 0) {
+    //             return response.status(404).json({ message: 'Usuário não encontrado' });
+    //         }
             
-            const token = crypto.randomBytes(20).toString('hex');
+    //         const token = crypto.randomBytes(20).toString('hex');
 
-            const now = new Date();
-            now.setHours(now.getHours() + 1);
+    //         const now = new Date();
+    //         now.setHours(now.getHours() + 1);
 
-            await mysql.execute('UPDATE usuarios SET passwordResetToken = ?, passwordResetExpires = ? WHERE email = ?', [token, now, email]);
+    //         await mysql.execute('UPDATE usuarios SET passwordResetToken = ?, passwordResetExpires = ? WHERE email = ?', [token, now, email]);
 
-            mailer.sendMail({
-                from: process.env.MAILER_USER,
-                to: email,
-                subject: 'Recuperação de senha',
-                text: `Olá, ${result[0].nome}, utilize o token ${token} para recuperar sua senha`,
-            }, (error) => {
-                if (error) {
-                    console.error(error);
-                    return response.status(500).json({ message: 'Erro ao enviar o e-mail de recuperação de senha' });
-                } else {
-                    return response.status(200).json({ message: 'E-mail enviado com sucesso' });
-                }
-            });
+    //         mailer.sendMail({
+    //             from: process.env.MAILER_USER,
+    //             to: email,
+    //             subject: 'Recuperação de senha',
+    //             text: `Olá, ${result[0].nome}, utilize o token ${token} para recuperar sua senha`,
+    //         }, (error) => {
+    //             if (error) {
+    //                 console.error(error);
+    //                 return response.status(500).json({ message: 'Erro ao enviar o e-mail de recuperação de senha' });
+    //             } else {
+    //                 return response.status(200).json({ message: 'E-mail enviado com sucesso' });
+    //             }
+    //         });
 
-        } catch (error) {
-            console.error(error);
-            return response.status(500).json({ message: 'Erro interno do servidor' });
-        }
-    },  
+    //     } catch (error) {
+    //         console.error(error);
+    //         return response.status(500).json({ message: 'Erro interno do servidor' });
+    //     }
+    // },  
     
+    // updatePassword: async (request, response) => {
+    //     try {
+    //         const { email, token, senha } = request.body;
+
+    //         const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
+
+    //         if (!result || result.length === 0) {
+    //             return response.status(404).json({ message: 'Usuário não encontrado' });
+    //         }
+
+    //         if (token !== result[0].passwordResetToken) {
+    //             return response.status(401).json({ message: 'Token inválido' });
+    //         }
+
+    //         const now = new Date();
+
+    //         if (now > result[0].passwordResetExpires) {
+    //             return response.status(401).json({ message: 'Token expirado' });
+    //         }
+
+    //         const senhaHash = await bcrypt.hash(senha, 10);
+
+    //         await mysql.execute('UPDATE usuarios SET senha = ? WHERE email = ?', [senhaHash, email]);
+    //         return response.status(200).json({ message: 'Senha atualizada com sucesso' });
+    //     } catch (error) {
+    //         console.error(error);
+    //         return response.status(500).json({ message: 'Erro interno do servidor' });
+    //     }
+    // },
+
     updatePassword: async (request, response) => {
         try {
-            const { email, token, senha } = request.body;
-
+            const { email, senha_atual, senha_nova } = request.body;
+    
             const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
-
+    
             if (!result || result.length === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
-
-            if (token !== result[0].passwordResetToken) {
-                return response.status(401).json({ message: 'Token inválido' });
+    
+            const senha_valida = await bcrypt.compare(senha_atual, result[0].senha);
+    
+            if (!senha_valida) {
+                return response.status(401).json({ message: 'Senha atual inválida' });
             }
-
-            const now = new Date();
-
-            if (now > result[0].passwordResetExpires) {
-                return response.status(401).json({ message: 'Token expirado' });
+    
+            if (senha_atual === senha_nova) {
+                return response.status(401).json({ message: 'A nova senha deve ser diferente da atual' });
             }
-
-            const senhaHash = await bcrypt.hash(senha, 10);
-
+    
+            const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
+    
+            if (!senhaRegex.test(senha_nova)) {
+                return response.status(401).json({ message: 'A nova senha deve ter pelo menos 6 caracteres, pelo menos um número e pelo menos um caractere especial' });
+            }
+    
+            const senhaHash = await bcrypt.hash(senha_nova, 10);
+    
             await mysql.execute('UPDATE usuarios SET senha = ? WHERE email = ?', [senhaHash, email]);
             return response.status(200).json({ message: 'Senha atualizada com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     updateUser: async (request, response) => {
         try {
