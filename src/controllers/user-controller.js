@@ -83,8 +83,8 @@ module.exports = {
             const params = [];
     
             if (nome_usuario) {
-                query += ' AND usuarios.nome = ?';
-                params.push(nome_usuario);
+                query += ' AND usuarios.nome LIKE ?';
+                params.push(`%${nome_usuario}%`);
             }
     
             if (data_inicial && data_final) {
