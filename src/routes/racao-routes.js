@@ -8,16 +8,16 @@ const router = express.Router();
 
 router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        data_inicial: Joi.date(),
-        data_final: Joi.date(),
+        data_inicial: Joi.date().allow('').optional(),
+        data_final: Joi.date().allow('').optional(),
         nome_racao: Joi.string().max(100).allow('').optional(),
     })
 }), racaoController.historicoCompras);
 
 router.get('/historico-producao', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        data_inicial: Joi.date(),
-        data_final: Joi.date(),
+        data_inicial: Joi.date().allow('').optional(),
+        data_final: Joi.date().allow('').optional(),
         nome_racao: Joi.string().max(100).allow('').optional(),
     })
 }), racaoController.historicoProducao);

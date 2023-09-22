@@ -24,7 +24,7 @@ module.exports = {
                     END AS status,
                     usuarios.cargo
                 FROM usuarios
-                WHERE 1`;
+                WHERE 1=1`;
     
             const params = [];
     
@@ -77,18 +77,14 @@ module.exports = {
                 FROM registros 
                 INNER JOIN usuarios ON registros.id_usuario = usuarios.id
                 INNER JOIN acoes ON registros.id_acao = acoes.id
+                WHERE 1=1
             `;
     
             const params = [];
     
             if (nome_usuario) {
-                query += ' WHERE usuarios.nome = ?';
+                query += ' AND usuarios.nome = ?';
                 params.push(nome_usuario);
-            }
-    
-            if (data) {
-                query += ' AND DATE(CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo")) = DATE(?)';
-                params.push(data);
             }
     
             if (data_inicial && data_final) {

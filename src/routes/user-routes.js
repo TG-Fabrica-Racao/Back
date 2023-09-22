@@ -10,8 +10,8 @@ router.get('/logs', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         nome_usuario: Joi.string().max(100).allow('').optional(),
         data: Joi.date().iso(),
-        data_inicial: Joi.date().iso(),
-        data_final: Joi.date().iso()
+        data_inicial: Joi.date().iso().allow('').optional(),
+        data_final: Joi.date().iso().allow('').optional(),
     })
 }), userController.getLogs);
 
