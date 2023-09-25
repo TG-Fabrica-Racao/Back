@@ -109,17 +109,6 @@ CREATE TABLE IF NOT EXISTS compras_ingrediente (
     FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id)
 );
 
-CREATE TABLE IF NOT EXISTS acerto_estoque_ingrediente (
-    id INT AUTO_INCREMENT,
-    id_ingrediente INT NOT NULL,
-    data_acerto DATETIME NOT NULL,
-    id_usuario INT NOT NULL,
-    quantidade DECIMAL(10,2) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id),
-    FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
-);
-
 CREATE TABLE IF NOT EXISTS compras_racao (
 	id INT AUTO_INCREMENT,
     data_compra DATETIME NOT NULL,
@@ -144,14 +133,16 @@ CREATE TABLE IF NOT EXISTS producao_racao (
     FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
 );
 
-CREATE TABLE IF NOT EXISTS acerto_estoque_racao (
+CREATE TABLE IF NOT EXISTS acerto_estoque (
     id INT AUTO_INCREMENT,
-    id_racao INT NOT NULL,
+    id_ingrediente INT,
+    id_racao INT,
     data_acerto DATETIME NOT NULL,
     id_usuario INT NOT NULL,
     quantidade DECIMAL(10,2) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id),
+    FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id),
     FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
 );
 

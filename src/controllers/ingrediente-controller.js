@@ -115,9 +115,9 @@ module.exports = {
                     ingredientes.nome AS racao,
                     CONVERT_TZ(acerto_estoque.data_acerto, 'UTC', 'America/Sao_Paulo') AS data_acerto_brasilia,
                     usuarios.nome AS usuario,
-                    acerto_estoque_ingrediente.quantidade
-                FROM acerto_estoque_ingrediente
-                INNER JOIN ingredientes ON acerto_estoque_ingrediente.id_ingrediente = ingredientes.id
+                    acerto_estoque.quantidade
+                FROM acerto_estoque
+                INNER JOIN ingredientes ON acerto_estoque.id_ingrediente = ingredientes.id
                 INNER JOIN usuarios ON acerto_estoque.id_usuario = usuarios.id
             `;
     
@@ -252,7 +252,7 @@ module.exports = {
             }
 
             const query = `
-                INSERT INTO acerto_estoque_ingrediente
+                INSERT INTO acerto_estoque
                     (id_ingrediente, data_acerto, id_usuario, quantidade)
                 VALUES
                     (?, NOW(), ?, ?)
