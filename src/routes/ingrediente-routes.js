@@ -14,6 +14,14 @@ router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
     })
 }), ingredienteController.historicoCompras);
 
+router.get('/acertos-estoque', login.verifyToken, roles.adminRole, celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        data_inicial: Joi.date().allow('').optional(),
+        data_final: Joi.date().allow('').optional(),
+        nome_ingrediente: Joi.string().max(100).allow('').optional()
+    })
+}), ingredienteController.historicoAcertoEstoque);
+
 router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         id: Joi.number().integer().allow('').optional(),
@@ -30,6 +38,17 @@ router.post('/create', login.verifyToken, celebrate({
     })
 }), ingredienteController.createIngrediente);
 
+router.patch('/update/:id', login.verifyToken, celebrate({
+    [Segments.PARAMS]: Joi.object({
+        id: Joi.number().integer().min(1).required()
+    }),
+    [Segments.BODY]: Joi.object().keys({
+        nome: Joi.string().min(3).max(100).required(),
+        id_grupo: Joi.number().integer().min(1).required(),
+        estoque_minimo: Joi.number().integer().min(1).required()
+    })
+}), ingredienteController.updateIngrediente);
+
 router.post('/comprar', login.verifyToken, roles.adminRole, celebrate({
     [Segments.BODY]: Joi.object().keys({
         data_compra: Joi.date().required(),
@@ -42,16 +61,12 @@ router.post('/comprar', login.verifyToken, roles.adminRole, celebrate({
     })
 }), ingredienteController.comprarIngrediente);
 
-router.patch('/update/:id', login.verifyToken, celebrate({
-    [Segments.PARAMS]: Joi.object({
-        id: Joi.number().integer().min(1).required()
-    }),
+router.post('/acertar-estoque', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
-        nome: Joi.string().min(3).max(100).required(),
-        id_grupo: Joi.number().integer().min(1).required(),
-        estoque_minimo: Joi.number().integer().min(1).required()
+        id_ingrediente: Joi.number().integer().min(1).required(),
+        quantidade: Joi.number().integer().min(1).required()
     })
-}), ingredienteController.updateIngrediente);
+}), ingredienteController.acertarEstoque);
 
 router.delete('/delete/:id', login.verifyToken, celebrate({
     [Segments.PARAMS]: Joi.object({

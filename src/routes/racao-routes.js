@@ -22,6 +22,14 @@ router.get('/historico-producao', login.verifyToken, celebrate({
     })
 }), racaoController.historicoProducao);
 
+router.get('/acertos-estoque', login.verifyToken, roles.adminRole, celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        data_inicial: Joi.date().allow('').optional(),
+        data_final: Joi.date().allow('').optional(),
+        nome_racao: Joi.string().max(100).allow('').optional()
+    })
+}), racaoController.historicoAcertoEstoque);
+
 router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         id: Joi.number().integer().allow('').optional(),
@@ -36,7 +44,7 @@ router.post('/create', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
         nome: Joi.string().min(3).max(100).required(),
         id_categoria: Joi.number().integer().min(1).required(),
-        tipo_racao: Joi.number().integer().min(0).required(),
+        tipo_racao: Joi.string().valid('Produção própria', 'Comprada', 'Ambos').required(),
         fase_utilizada: Joi.number().integer().min(1).required(),
         batida: Joi.number().integer().min(1).required(),
         estoque_minimo: Joi.number().integer().min(1).required(),
@@ -90,7 +98,6 @@ router.post('/produzir', login.verifyToken, celebrate({
 router.post('/acertar-estoque', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
         id_racao: Joi.number().integer().min(1).required(),
-        data_acerto: Joi.date().required(),
         quantidade: Joi.number().integer().min(1).required()
     })
 }), racaoController.acertarEstoque);
