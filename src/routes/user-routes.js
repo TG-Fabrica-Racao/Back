@@ -70,7 +70,7 @@ router.patch('/update-password', login.verifyToken, celebrate({
         senha_atual: Joi.string().min(3).max(100).required(),
         nova_senha: Joi.string().min(3).max(100).required()
     })
-}), userController.updatePassword) 
+}), userController.updatePassword); 
 
 router.patch('/disable/:id', login.verifyToken, roles.adminRole, celebrate({
     [Segments.PARAMS]: Joi.object({

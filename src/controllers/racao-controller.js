@@ -510,6 +510,10 @@ module.exports = {
                 return response.status(404).json({ message: 'Ração não encontrada' });
             }
 
+            if (racao[0].estoque_atual < quantidade) {
+                return response.status(400).json({ message: 'Estoque insuficiente' });
+            }
+
             const query = `
                 INSERT INTO acerto_estoque
                     (id_racao, data_acerto, id_usuario, quantidade)
