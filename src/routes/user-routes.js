@@ -19,11 +19,11 @@ router.get('/', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         id: Joi.number().integer().allow('').optional(),
         nome: Joi.string().max(100).allow('').optional(),
-        email: Joi.string().max(100).allow('').optional(),
+        email: Joi.string().email().max(100).allow('').optional(),
         telefone: Joi.string().max(20).allow('').optional(),
-        cargo: Joi.string().max(100).allow('').optional()
+        cargo: Joi.string().valid('Administrador', 'Funcionário').allow('').optional()
     })
-}), userController.getAllUser);
+}), userController.getAllUsers);
 
 router.post('/create', celebrate({
     [Segments.BODY]: Joi.object().keys({
@@ -68,7 +68,7 @@ router.patch('/update-password', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
         email: Joi.string().email().min(3).max(100).required(),
         senha_atual: Joi.string().min(3).max(100).required(),
-        nova_senha: Joi.string().min(3).max(100).required()
+        senha_nova: Joi.string().min(3).max(100).required()
     })
 }), userController.updatePassword); 
 

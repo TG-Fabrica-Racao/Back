@@ -7,7 +7,7 @@ require('dotenv').config();
 
 module.exports = {
 
-    getAllUser: async (request, response) => {
+    getAllUsers: async (request, response) => {
         try {
             const { id, nome, email, telefone, cargo } = request.query;
     
