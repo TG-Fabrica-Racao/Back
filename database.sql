@@ -197,9 +197,11 @@ BEGIN
     DECLARE index_loop INT;
     DECLARE index_loop2 INT;
     DECLARE id_racao_update INT;
-    DECLARE quantidade_ingrediente_batida DECIMAL;
-    DECLARE quantidade_ingrediente INT;
-    DECLARE quantidade_total INT;
+    DECLARE quantidade_ingrediente_batida DECIMAL(10, 2);
+    DECLARE quantidade_ingrediente DECIMAL(10, 2);
+    DECLARE quantidade_total DECIMAL(10, 2);
+    DECLARE novo_estoque DECIMAL(10, 2);
+    DECLARE estoque_agora DECIMAL(10, 2);
     DECLARE cursor_ingredientes CURSOR FOR
         SELECT id_ingrediente
         FROM ingrediente_racao
@@ -223,8 +225,10 @@ BEGIN
         SELECT quantidade INTO quantidade_ingrediente FROM ingrediente_racao WHERE id_racao = id_racao_update AND id_ingrediente = id_ingrediente_update LIMIT index_loop;
 
         SET quantidade_ingrediente_batida = (quantidade_ingrediente / quantidade_total) * quantidade_produzida;
-
-        UPDATE ingredientes SET estoque_atual = estoque_atual - quantidade_ingrediente_batida WHERE id_racao_update = id_ingrediente_update;
+		
+        SELECT estoque_atual INTO estoque_agora FROM ingredientes where id = id_ingrediente_update;
+        SET novo_estoque = (estoque_agora - quantidade_ingrediente_batida);
+        UPDATE ingredientes SET estoque_atual = novo_estoque WHERE id = id_ingrediente_update;
         
         SET index_loop = index_loop + 1;
     END WHILE;

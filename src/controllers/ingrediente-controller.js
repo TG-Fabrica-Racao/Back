@@ -223,9 +223,6 @@ module.exports = {
             }
 
             const novo_estoque = ingrediente[0].estoque_atual + quantidade_liquida;
-
-            console.log(novo_estoque, ingrediente[0].estoque_atual, quantidade_liquida);
-
             const [result] = await mysql.execute(query, [id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_ingrediente]);
