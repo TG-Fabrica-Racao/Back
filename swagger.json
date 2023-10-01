@@ -97,6 +97,32 @@
             "get": {
                 "summary": "Rota responsável por retornar todos os registros do sistema",
                 "tags": ["Usuários"],
+                "parameters": [
+                    {
+                        "name": "nome_usuario",
+                        "in": "query",
+                        "description": "Filtrar logs por nome do usuário (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "data_inicial",
+                        "in": "query",
+                        "description": "Filtrar logs em um determinado período, começando pela data_inicial",
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "data_final",
+                        "in": "query",
+                        "description": "e terminando na data_final. É possível utilizar cada filtro individualmente.",
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Operação bem-sucedida",
@@ -234,12 +260,7 @@
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "id_usuario": 1,
-                                    "nome": "José",
-                                    "email": "jose_garcia@gmail.com",
-                                    "telefone": "(14) 7657 - 5468",	
-                                    "status_usuario": 0,
-                                    "cargo": "Funcionário",
+                                    "message": "Autenticado com sucesso",
                                     "token": "token"
                                 }
                             }
@@ -279,6 +300,10 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "felipe@gmail.com"
+                                    },
                                     "senha_atual": {
                                         "type": "string",
                                         "example": "senha123"
@@ -288,7 +313,7 @@
                                         "example": "12345"
                                     }
                                 },
-                                "required": ["senha_atual", "senha_nova"]
+                                "required": ["email", "senha_atual", "senha_nova"]
                             }
                         }
                     }
@@ -299,23 +324,23 @@
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "message": "Senha alterada com sucesso"
+                                    "message": "Senha atualizada com sucesso"
                                 }
                             }
                         }
                     },
                     "400": {
-                        "description": "Erro de validação",
+                        "description": "Requisição inválida",
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "message": "Senha nova não informada ou senha atual não informada"
+                                    "message": "A nova senha deve ter pelo menos 6 caracteres, pelo menos um número e pelo menos um caractere especial"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "Senha atual incorreta"
+                        "description": "Senha atual inválida"
                     },
                     "404": {
                         "description": "Usuário não encontrado"
@@ -423,7 +448,7 @@
                         "in": "query",
                         "description": "ID do ingrediente para filtrar (opcional)",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     {
@@ -478,6 +503,24 @@
             "get": {
                 "summary": "Rota responsável por retornar o histórico de compras dos ingredientes",
                 "tags": ["Ingredientes"],
+                "parameters": [
+                    {
+                        "name": "data_inicial",
+                        "in": "query",
+                        "description": "Filtrar histórico de acertos em um determinado período, começando pela data_inicial",
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "data_final",
+                        "in": "query",
+                        "description": "e terminando na data_final. É possível utilizar cada filtro individualmente.",
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Operação bem-sucedida",
@@ -504,6 +547,69 @@
                 }
             }
         },
+        "/ingredientes/acertos-estoque": {
+            "get": {
+                "summary": "Rota responsável por retornar todos os acertos de estoque dos ingredientes",
+                "tags": ["Ingredientes"],
+                "parameters": [
+                    {
+                        "name": "nome_ingrediente",
+                        "in": "query",
+                        "description": "Nome do ingrediente para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "data_inicial",
+                        "in": "query",
+                        "description": "Filtrar histórico de acertos em um determinado período, começando pela data_inicial",
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "data_final",
+                        "in": "query",
+                        "description": "e terminando na data_final. É possível utilizar cada filtro individualmente.",
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "ingrediente": "Milho",
+                                        "data_acerto": "2023-08-09",
+                                        "usuario": "Cleber",
+                                        "quantidade": 2000
+                                    },
+                                    {
+                                        "id": 1,
+                                        "ingrediente": "Farinha",
+                                        "data_acerto": "2023-10-10",
+                                        "usuario": "Cleber",
+                                        "quantidade": 2000
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },    
         "/ingredientes/create": {
             "post": {
                 "summary": "Rota responsável por cadastar um novo ingrediente",
@@ -616,6 +722,52 @@
                     },
                     "400": {
                         "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/ingredientes/acertar-estoque": {
+            "post": {
+                "summary": "Rota responsável por realizar o acerto de estoque de um ingrediente",
+                "tags": ["Ingredientes"],
+                "requestBody": {
+                    "description": "Dados para acertar estoque de um ingrediente",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id_ingrediente": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantidade": {
+                                        "type": "number",
+                                        "example": 2000
+                                    }
+                                },
+                                "required": ["id_ingrediente", "quantidade"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Acerto de estoque realizado com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requisição inválida. Forneça o id do ingrediente e a quantidade a ser acertada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -822,6 +974,69 @@
                 }
             }
         },
+        "/racoes/acertos-estoque": {
+            "get": {
+                "summary": "Rota responsável por retornar todos os acertos de estoque das rações",
+                "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "nome_racao",
+                        "in": "query",
+                        "description": "Nome da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "data_inicial",
+                        "in": "query",
+                        "description": "Filtrar histórico de acertos em um determinado período, começando pela data_inicial",
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "data_final",
+                        "in": "query",
+                        "description": "e terminando na data_final. É possível utilizar cada filtro individualmente.",
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "ração": "Ração 12",
+                                        "data_acerto": "2023-08-09",
+                                        "usuario": "Cleber",
+                                        "quantidade": 3000
+                                    },
+                                    {
+                                        "id": 2,
+                                        "ração": "Ração 21",
+                                        "data_acerto": "2023-10-10",
+                                        "usuario": "Felipe",
+                                        "quantidade": 2000
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },    
         "/racoes/create": {
             "post": {
                 "summary": "Rota responsável por cadastrar uma ração",
@@ -1196,7 +1411,52 @@
                 }
             }
         },
-        
+        "/racoes/acertar-estoque": {
+            "post": {
+                "summary": "Rota responsável por realizar o acerto de estoque de uma ração",
+                "tags": ["Rações"],
+                "requestBody": {
+                    "description": "Dados para acertar estoque de uma ração",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "id_racao": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "quantidade": {
+                                        "type": "number",
+                                        "example": 2000
+                                    }
+                                },
+                                "required": ["id_racao", "quantidade"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Acerto de estoque realizado com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Requisição inválida. Forneça o id da ingrediente"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
         "/racoes/delete/{id}": {
             "delete": {
                 "summary": "Rota responsável por deletar uma ração",

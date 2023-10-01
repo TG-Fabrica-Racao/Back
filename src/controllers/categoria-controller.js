@@ -31,8 +31,14 @@ module.exports = {
             const { nome } = request.body;
             const query = 'INSERT INTO categorias (nome) VALUES (?)';
 
+            const [categoria] = await mysql.execute('SELECT * FROM categorias WHERE nome = ?', [nome]);
+
             if (!nome) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o nome da categoria' });
+                return response.status(400).json({ message: 'Informe o nome da categoria' });
+            }
+
+            if (categoria.length > 0) {
+                return response.status(400).json({ message: 'Categoria já cadastrada' });
             }
 
             const [result] = await mysql.execute(query, [nome]);
@@ -48,8 +54,14 @@ module.exports = {
             const { nome } = request.body;
             const query = 'UPDATE categorias SET nome = ? WHERE id = ?';
 
+            const [categoria] = await mysql.execute('SELECT * FROM categorias WHERE id = ?', [request.params.id]);
+
             if (!nome) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o nome da categoria' });
+                return response.status(400).json({ message: 'Informe o nome da categoria' });
+            }
+
+            if (!categoria) {
+                return response.status(400).json({ message: 'Categoria não encontrada' });
             }
 
             await mysql.execute(query, [nome, request.params.id]);
@@ -64,8 +76,14 @@ module.exports = {
         try {
             const query = 'DELETE FROM categorias WHERE id = ?';
 
+            const [categoria] = await mysql.execute('SELECT * FROM categorias WHERE id = ?', [request.params.id]);
+
             if (!request.params.id) {
                 return response.status(400).json({ message: 'Requisição inválida. Forneça o id da categoria' });
+            }
+
+            if (!categoria) {
+                return response.status(400).json({ message: 'Categoria não encontrada' });
             }
 
             await mysql.execute(query, [request.params.id]);

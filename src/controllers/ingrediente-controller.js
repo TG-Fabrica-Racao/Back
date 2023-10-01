@@ -112,7 +112,8 @@ module.exports = {
     
             let query = `
                 SELECT 
-                    ingredientes.nome AS racao,
+                    acerto_estoque.id,
+                    ingredientes.nome AS ingrediente,
                     CONVERT_TZ(acerto_estoque.data_acerto, 'UTC', 'America/Sao_Paulo') AS data_acerto_brasilia,
                     usuarios.nome AS usuario,
                     acerto_estoque.quantidade

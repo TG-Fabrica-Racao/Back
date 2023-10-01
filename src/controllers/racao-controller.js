@@ -475,6 +475,10 @@ module.exports = {
             if (racao[0].tipo_racao === 'Comprada') {
                 return response.status(400).json({ message: 'Essa ração é apenas comprada, portanto não pode ser produzida' });
             }
+
+            if (quantidade < racao[0].quantidade) {
+                return response.status(400).json({ message: 'A quantidade de ração a ser produzida deve ser maior ou igual à batida da ração' });
+            }
     
             const query = `
                 INSERT INTO  producao_racao

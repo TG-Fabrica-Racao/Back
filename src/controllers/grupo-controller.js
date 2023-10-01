@@ -30,8 +30,14 @@ module.exports = {
             const { nome } = request.body;
             const query = 'INSERT INTO grupos (nome) VALUES (?)';
 
+            const [grupo] = await mysql.execute('SELECT * FROM grupos WHERE nome = ?', [nome]);
+
             if (!nome) {
                 return response.status(400).json({ message: 'Informe o nome do grupo' });
+            }
+            
+            if (grupo.length > 0) {
+                return response.status(400).json({ message: 'Grupo já cadastrado' });
             }
 
             const [result] = await mysql.execute(query, [nome]);
@@ -47,8 +53,18 @@ module.exports = {
             const { nome } = request.body;
             const query = 'UPDATE grupos SET nome = ? WHERE id = ?';
 
+            const [grupo] = await mysql.execute('SELECT * FROM grupos WHERE id = ?', [request.params.id]);
+
             if (!request.params.id) {
                 return response.status(400).json({ message: 'Requisição inválida. Forneça o id do grupo' });
+            }
+
+            if (!nome) {
+                return response.status(400).json({ message: 'Informe o nome do grupo' });
+            }
+
+            if (!grupo) {
+                return response.status(400).json({ message: 'Grupo não encontrado' });
             }
 
             await mysql.execute(query, [nome, request.params.id]);
@@ -63,8 +79,14 @@ module.exports = {
         try {
             const query = 'DELETE FROM grupos WHERE id = ?';
 
+            const [grupo] = await mysql.execute('SELECT * FROM grupos WHERE id = ?', [request.params.id]);
+
             if (!request.params.id) {
                 return response.status(400).json({ message: 'Requisição inválida. Forneça o id do grupo' });
+            }
+
+            if (!grupo) {
+                return response.status(400).json({ message: 'Grupo não encontrado' });
             }
 
             await mysql.execute(query, [request.params.id]);
