@@ -25,7 +25,7 @@ router.get('/', login.verifyToken, roles.adminRole, celebrate({
     })
 }), userController.getAllUsers);
 
-router.post('/create', celebrate({
+router.post('/create', login.verifyToken, roles.adminRole, celebrate({
     [Segments.BODY]: Joi.object().keys({
         nome: Joi.string().min(3).max(100).required(),
         email: Joi.string().email().min(3).max(100).required(),

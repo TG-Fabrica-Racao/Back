@@ -9,14 +9,16 @@ module.exports = {
             const { nome, nome_grupo, id } = request.query;
     
             let query =
-                `SELECT 
+                `
+                SELECT 
                     ingredientes.id,
                     ingredientes.nome,
                     grupos.nome AS grupo,
                     ingredientes.estoque_minimo,
-                    ingredientes.estoque_atual
+                    COALESCE(ingredientes.estoque_atual, 0) AS estoque_atual
                 FROM ingredientes
-                INNER JOIN grupos ON ingredientes.id_grupo = grupos.id`;
+                INNER JOIN grupos ON ingredientes.id_grupo = grupos.id
+            `;
     
             const params = [];
     

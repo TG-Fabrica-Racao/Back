@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 
 CREATE TABLE IF NOT EXISTS ingredientes (
-	id INT AUTO_INCREMENT,
+    id INT AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
     id_grupo INT NOT NULL,
     estoque_minimo DECIMAL(10, 2) NOT NULL,
