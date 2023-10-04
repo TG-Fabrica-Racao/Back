@@ -6,55 +6,61 @@ module.exports = {
 
     getAllRacoes: async (request, response) => {
         try {
-            const { id, nome, categoria, fase_utilizada } = request.query;
+            const { id, nome, categoria, fase_utilizada, tipo_racao } = request.query;
+            
             const params = [];
-    
-            let where = '1=1';
+
+            let where = "WHERE 1=1";
     
             if (id) {
-                where += ` AND racoes.id = ?`;
+                where += " AND racoes.id = ?";
                 params.push(id);
             }
     
             if (nome) {
-                where += ` AND racoes.nome LIKE ?`;
+                where += " AND racoes.nome LIKE ?";
                 params.push(`%${nome}%`);
             }
     
             if (categoria) {
-                where += ` AND categorias.nome LIKE ?`;
+                where += " AND categorias.nome LIKE ?";
                 params.push(`%${categoria}%`);
             }
     
             if (fase_utilizada) {
-                where += ` AND fases_granja.nome LIKE ?`;
+                where += " AND fases_granja.nome LIKE ?";
                 params.push(`%${fase_utilizada}%`);
             }
     
+            if (tipo_racao) {
+                where += " AND racoes.tipo_racao LIKE ?";
+                params.push(`%${tipo_racao}%`);
+            }
+    
             const query = `
-                    SELECT
-                    racoes.id,
-                    racoes.nome,
-                    categorias.nome AS categoria,
-                    racoes.tipo_racao,
-                    fases_granja.nome AS fase_utilizada,
-                    racoes.batida,
-                    racoes.estoque_minimo,
-                    racoes.estoque_atual,
-                    IFNULL(
-                        GROUP_CONCAT(
-                            CONCAT('ID:', ingredientes.id, ' ' ,ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')
-                            SEPARATOR ', '
-                        ),
-                        NULL
-                    ) AS ingredientes
-                    FROM racoes
-                    LEFT JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
-                    LEFT JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
-                    INNER JOIN categorias ON racoes.id_categoria = categorias.id
-                    INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
-                    WHERE ${where}
-                    GROUP BY racoes.id, racoes.nome, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida;
+                SELECT
+                racoes.id,
+                racoes.nome,
+                categorias.nome AS categoria,
+                racoes.tipo_racao,
+                fases_granja.nome AS fase_utilizada,
+                racoes.batida,
+                racoes.estoque_minimo,
+                racoes.estoque_atual,
+                IFNULL(
+                    GROUP_CONCAT(
+                        CONCAT('ID:', ingredientes.id, ' ' ,ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')
+                        SEPARATOR ', '
+                    ),
+                    NULL
+                ) AS ingredientes
+                FROM racoes
+                LEFT JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
+                LEFT JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
+                INNER JOIN categorias ON racoes.id_categoria = categorias.id
+                INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
+                ${where}
+                GROUP BY racoes.id, racoes.nome, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida;
             `;
     
             const [result] = await mysql.execute(query, params);

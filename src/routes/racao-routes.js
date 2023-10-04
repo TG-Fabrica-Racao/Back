@@ -36,6 +36,7 @@ router.get('/', login.verifyToken, celebrate({
         nome: Joi.string().max(100).allow('').optional(),
         categoria: Joi.string().max(100).allow('').optional(),
         fase_utilizada: Joi.string().max(100).allow('').optional(),
+        tipo_racao: Joi.string().max(100).allow('').optional(),
 
     })
 }), racaoController.getAllRacoes);
