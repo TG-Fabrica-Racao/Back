@@ -6,7 +6,7 @@ module.exports = {
 
     getAllIngredientes: async (request, response) => {
         try {
-            const { nome, nome_grupo, id } = request.query;
+            const { nome, grupo, id } = request.query;
     
             let query =
                 `
@@ -22,7 +22,7 @@ module.exports = {
     
             const params = [];
     
-            if (nome || nome_grupo || id) {
+            if (nome || grupo || id) {
                 query += ' WHERE';
     
                 if (id) {
@@ -30,7 +30,7 @@ module.exports = {
                     params.push(id);
                 }
     
-                if (nome && (nome_grupo || id)) {
+                if (nome && (grupo || id)) {
                     query += ' AND';
                 }
     
@@ -39,13 +39,13 @@ module.exports = {
                     params.push(`%${nome}%`);
                 }
     
-                if (nome_grupo && (nome || id)) {
+                if (grupo && (nome || id)) {
                     query += ' AND';
                 }
     
-                if (nome_grupo) {
+                if (grupo) {
                     query += ' grupos.nome LIKE ?';
-                    params.push(`%${nome_grupo}%`);
+                    params.push(`%${grupo}%`);
                 }
             }
     

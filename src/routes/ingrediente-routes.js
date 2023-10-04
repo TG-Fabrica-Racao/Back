@@ -26,7 +26,7 @@ router.get('/', login.verifyToken, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         id: Joi.number().integer().allow('').optional(),
         nome: Joi.string().max(100).allow('').optional(),
-        nome_grupo: Joi.string().max(100).allow('').optional()
+        grupo: Joi.string().max(100).allow('').optional()
     })
 }), ingredienteController.getAllIngredientes);
 
