@@ -13,6 +13,7 @@ module.exports = {
                 SELECT 
                     ingredientes.id,
                     ingredientes.nome,
+                    grupos.id AS id_grupo,	
                     grupos.nome AS grupo,
                     ingredientes.estoque_minimo,
                     COALESCE(ingredientes.estoque_atual, 0) AS estoque_atual
