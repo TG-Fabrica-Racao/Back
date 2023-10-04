@@ -164,6 +164,12 @@ module.exports = {
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
                 
             const { nome, id_grupo, estoque_minimo } = request.body;
+
+            const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE nome = ?', [nome]);
+
+            if (ingrediente.length > 0) {
+                return response.status(400).json({ message: 'Ingrediente já cadastrado' });
+            }
     
             const query = 
                 `INSERT INTO ingredientes
