@@ -49,6 +49,8 @@ module.exports = {
                     params.push(`%${grupo}%`);
                 }
             }
+
+            query += ' ORDER BY ingredientes.id';
     
             const [result] = await mysql.execute(query, params);
             return response.status(200).json(result);
