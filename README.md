@@ -8,10 +8,14 @@ CREATE DATABASE IF NO EXISTS fabrica_racao;
 <br>
 
 ---
-### Para criar o banco de dados e importar os dados automaticamente, é possível utilizar o arquivo "fabrica_racao.sql" que está na pasta "back-end" do projeto. Abra o software MySQL Workbench, clique em Server > Data Import e selecione o arquivo "fabrica_racao.sql" para importar os dados. Escolha a database "fabrica_racao" e clique em "Start Import".
+### Para criar o banco de dados e importar os dados automaticamente, é possível utilizar o arquivo "fabrica_racao.sql" que está na pasta "back-end" do projeto. 
+
+### - Abra o software MySQL Workbench, clique em Server > Data Import e selecione o arquivo "fabrica_racao.sql" para importar os dados. 
+
+### - Escolha a database "fabrica_racao" e clique em "Start Import".
 
 ![Server](https://i.imgur.com/7sfyoiR.png)
-
+---
 ![Data import](https://i.imgur.com/VYg1NAz.png)
 
 ---
