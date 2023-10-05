@@ -4,7 +4,7 @@ module.exports = {
 
     getAllCategorias: async (request, response) => {
         try {
-            const {  id, nome } = request.query;
+            const { id, nome } = request.query;
 
             const query = 'SELECT * FROM categorias';
             
@@ -33,10 +33,6 @@ module.exports = {
 
             const [categoria] = await mysql.execute('SELECT * FROM categorias WHERE nome = ?', [nome]);
 
-            if (!nome) {
-                return response.status(400).json({ message: 'Informe o nome da categoria' });
-            }
-
             if (categoria.length > 0) {
                 return response.status(400).json({ message: 'Categoria já cadastrada' });
             }
@@ -56,10 +52,6 @@ module.exports = {
 
             const [categoria] = await mysql.execute('SELECT * FROM categorias WHERE id = ?', [request.params.id]);
 
-            if (!nome) {
-                return response.status(400).json({ message: 'Informe o nome da categoria' });
-            }
-
             if (!categoria) {
                 return response.status(400).json({ message: 'Categoria não encontrada' });
             }
@@ -76,10 +68,12 @@ module.exports = {
         try {
             const query = 'DELETE FROM categorias WHERE id = ?';
 
+            const [categoria_racao] = await mysql.execute('SELECT * FROM racoes WHERE id_categoria = ?', [request.params.id]);
+
             const [categoria] = await mysql.execute('SELECT * FROM categorias WHERE id = ?', [request.params.id]);
 
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id da categoria' });
+            if (categoria_racao.length > 0) {
+                return response.status(400).json({ message: 'Categoria não pode ser deletada, pois está associada a uma ração' });
             }
 
             if (!categoria) {

@@ -290,10 +290,16 @@ module.exports = {
                 `DELETE FROM ingredientes
                 WHERE id = ?`;
 
-            const [ingredientes] = await mysql.execute('SELECT * FROM ingrediente_racao WHERE id_ingrediente = ?', [request.params.id]);
+            const [ingrediente_racao] = await mysql.execute('SELECT * FROM ingrediente_racao WHERE id_ingrediente = ?', [request.params.id]);
 
-            if (ingredientes.length > 0) {
+            const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [request.params.id]);
+
+            if (ingrediente_racao.length > 0) {
                 return response.status(400).json({ message: 'Não é possível deletar um ingrediente que está relacionado a uma ração' });
+            }
+
+            if (!ingrediente) {
+                return response.status(404).json({ message: 'Ingrediente não encontrado' });
             }
 
             await mysql.execute(query, [request.params.id]);

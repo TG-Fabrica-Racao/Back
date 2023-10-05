@@ -31,10 +31,6 @@ module.exports = {
             const query = 'INSERT INTO grupos (nome) VALUES (?)';
 
             const [grupo] = await mysql.execute('SELECT * FROM grupos WHERE nome = ?', [nome]);
-
-            if (!nome) {
-                return response.status(400).json({ message: 'Informe o nome do grupo' });
-            }
             
             if (grupo.length > 0) {
                 return response.status(400).json({ message: 'Grupo já cadastrado' });
@@ -55,14 +51,6 @@ module.exports = {
 
             const [grupo] = await mysql.execute('SELECT * FROM grupos WHERE id = ?', [request.params.id]);
 
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id do grupo' });
-            }
-
-            if (!nome) {
-                return response.status(400).json({ message: 'Informe o nome do grupo' });
-            }
-
             if (!grupo) {
                 return response.status(400).json({ message: 'Grupo não encontrado' });
             }
@@ -79,10 +67,12 @@ module.exports = {
         try {
             const query = 'DELETE FROM grupos WHERE id = ?';
 
+            const [grupo_ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id_grupo = ?', [request.params.id]);
+
             const [grupo] = await mysql.execute('SELECT * FROM grupos WHERE id = ?', [request.params.id]);
 
-            if (!request.params.id) {
-                return response.status(400).json({ message: 'Requisição inválida. Forneça o id do grupo' });
+            if (grupo_ingrediente.length > 0) {
+                return response.status(400).json({ message: 'Grupo não pode ser deletado pois está associado a um ingrediente' });
             }
 
             if (!grupo) {
