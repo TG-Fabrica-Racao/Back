@@ -38,30 +38,35 @@ module.exports = {
             }
     
             const query = `
-                SELECT
-                racoes.id,
-                racoes.nome,
-                categorias.nome AS categoria,
-                racoes.tipo_racao,
-                fases_granja.nome AS fase_utilizada,
-                racoes.batida,
-                racoes.estoque_minimo,
-                racoes.estoque_atual,
-                IFNULL(
-                    GROUP_CONCAT(
-                        CONCAT('ID:', ingredientes.id, ' ' ,ingredientes.nome, ' (', ingrediente_racao.quantidade, ')')
-                        SEPARATOR ', '
-                    ),
-                    NULL
-                ) AS ingredientes
-                FROM racoes
-                LEFT JOIN ingrediente_racao ON racoes.id = ingrediente_racao.id_racao
-                LEFT JOIN ingredientes ON ingrediente_racao.id_ingrediente = ingredientes.id
-                INNER JOIN categorias ON racoes.id_categoria = categorias.id
-                INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
-                ${where}
-                GROUP BY racoes.id, racoes.nome, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida;
-            `;
+    SELECT
+        racoes.id,
+        racoes.nome,
+        categorias.id AS id_categoria,
+        categorias.nome AS categoria,
+        racoes.tipo_racao,
+        fases_granja.nome AS fase_utilizada,
+        racoes.batida,
+        racoes.estoque_minimo,
+        COALESCE(racoes.estoque_atual, 0) AS estoque_atual,
+        COALESCE(ingredientList.ingredients, '') AS ingredientes
+    FROM racoes
+    INNER JOIN categorias ON racoes.id_categoria = categorias.id
+    INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
+    LEFT JOIN (
+        SELECT
+            ir.id_racao,
+            GROUP_CONCAT(
+                CONCAT('ID:', i.id, ' ', i.nome, ' (', ir.quantidade, ')')
+                SEPARATOR ', '
+            ) AS ingredients
+        FROM ingrediente_racao ir
+        INNER JOIN ingredientes i ON ir.id_ingrediente = i.id
+        GROUP BY ir.id_racao
+    ) AS ingredientList ON racoes.id = ingredientList.id_racao
+    ${where}
+`;
+
+
     
             const [result] = await mysql.execute(query, params);
             return response.status(200).json(result);
