@@ -1176,10 +1176,20 @@
                 }
             }
         },   
-        "/racoes/insert-ingredientes": {
+        "/racoes/insert-ingredientes/:id_racao": {
             "post": {
                 "summary": "Rota responsável por inserir ingredientes na fórmula da ração",
                 "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "id_racao",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Dados para inserir um ingrediente",
                     "required": true,
@@ -1188,10 +1198,6 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "id_racao": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "id_ingrediente": {
                                         "type": "integer",
                                         "example": 1
@@ -1201,7 +1207,7 @@
                                         "example": 500
                                     }
                                 },
-                                "required": ["id_ingrediente", "id_racao", "quantidade"]
+                                "required": ["id_ingrediente", "quantidade"]
                             }
                         }
                     }
@@ -1219,10 +1225,20 @@
                 }
             }
         },    
-        "/racoes/update-ingredientes": {
+        "/racoes/update-ingredientes/:id_racao": {
             "patch": {
                 "summary": "Rota responsável por atualizar ingredientes na fórmula da ração",
                 "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "id_racao",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Dados para atualizar ingredientes",
                     "required": true,
@@ -1233,10 +1249,6 @@
                                 "items": {
                                     "type": "object",
                                     "properties": {
-                                        "id_racao": {
-                                            "type": "integer",
-                                            "example": 1
-                                        },
                                         "id_ingrediente": {
                                             "type": "integer",
                                             "example": 1
@@ -1246,17 +1258,11 @@
                                             "example": 500
                                         }
                                     },
-                                    "required": ["id_racao", "id_ingrediente", "quantidade"]
+                                    "required": ["id_ingrediente", "quantidade"]
                                 },
                                 "example": [
                                     {
-                                        "id_racao": 1,
                                         "id_ingrediente": 1,
-                                        "quantidade": 500
-                                    },
-                                    {
-                                        "id_racao": 1,
-                                        "id_ingrediente": 2,
                                         "quantidade": 500
                                     }
                                 ]
@@ -1277,10 +1283,20 @@
                 }
             }
         },     
-        "/racoes/delete-ingrediente": {
+        "/racoes/delete-ingrediente/:id_racao": {
             "delete": {
                 "summary": "Rota responsável por remover ingredientes da fórmula da ração",
                 "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "id_racao",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "description": "Dados para remover ingredientes",
                     "required": true,
@@ -1289,16 +1305,12 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "id_racao": {
-                                        "type": "integer",
-                                        "example": 1
-                                    },
                                     "id_ingrediente": {
                                         "type": "integer",
                                         "example": 1
                                     }
                                 },
-                                "required": ["id_racao", "id_ingrediente"]
+                                "required": ["id_ingrediente"]
                             }
                         }
                     }

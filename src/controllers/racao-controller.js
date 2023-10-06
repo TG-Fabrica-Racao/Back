@@ -212,7 +212,16 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
             
-            const { nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo, ingredientes } = request.body;
+            const { nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, ingredientes } = request.body;
+    
+            let batida = 0; // Inicializa a batida como zero
+    
+            if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+                // Calcula a batida com base nas quantidades de ingredientes
+                for (const ingrediente of ingredientes) {
+                    batida += ingrediente.quantidade;
+                }
+            }
     
             if (tipo_racao === "Comprada") {
                 const racao_query =
@@ -223,12 +232,6 @@ module.exports = {
         
                 await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo]);
             } else {
-                const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
-        
-                if (soma_quantidades !== batida) {
-                    return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
-                }
-        
                 const racao_query =
                     `INSERT INTO racoes
                         (nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo)
@@ -265,7 +268,7 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
-            const { nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo } = request.body;
+            const { nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo } = request.body;
 
             if (tipo_racao === "Comprada") {
                 const query =
@@ -277,14 +280,14 @@ module.exports = {
             } else {
                 const query =
                 `UPDATE racoes
-                    SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?, batida = ?
+                    SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?
                 WHERE id = ?`;
 
                 if (!request.params.id) {
                     return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração' });
                 }
 
-                await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, batida, request.params.id]);
+                await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, request.params.id]);
             }
             
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `O usuário ${decodedToken.nome} atualizaou a ração ${nome}`]);        
@@ -299,23 +302,26 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-    
+            
+            const { id_racao } = request.params; 
             const ingredientes = request.body;
-
+    
             const idRacaoSet = new Set(ingredientes.map(ingrediente => ingrediente.id_racao));
             if (idRacaoSet.size !== 1) {
                 return response.status(400).json({ message: 'Todos os ingredientes devem pertencer à mesma ração.' });
             }
-    
-            const id_racao = ingredientes[0].id_racao;
-    
+        
             const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
     
+            // Obtém a batida atual da ração no banco de dados
             const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
     
-            if (!batida_racao || soma_quantidades !== batida_racao[0].batida) {
-                return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
+            if (!batida_racao) {
+                return response.status(400).json({ message: 'Ração não encontrada.' });
             }
+    
+            // Calcula a nova batida da ração com base nas quantidades dos ingredientes
+            const nova_batida = parseFloat((batida_racao[0].batida + soma_quantidades));
     
             const values = [];
     
@@ -332,19 +338,23 @@ module.exports = {
                 values.push(result.values);
             }
     
+            // Atualiza a batida da ração no banco de dados com a nova batida calculada
+            await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
+    
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 7, `O usuário ${decodedToken.nome} adicionou ingrediente(s) na fórmula da ração ${id_racao}`]);
             return response.status(201).json({ message: 'Ingredientes inseridos na ração com sucesso!' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },      
+    },    
 
     updateIngredienteInRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-    
+            
+            const { id_racao } = request.params;
             const ingredientes = request.body;
     
             if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
@@ -356,9 +366,7 @@ module.exports = {
             if (idRacaoSet.size !== 1) {
                 return response.status(400).json({ message: 'Todos os ingredientes devem pertencer à mesma ração.' });
             }
-    
-            const id_racao = ingredientes[0].id_racao;
-    
+            
             // Calcular a soma das quantidades dos ingredientes a serem atualizados
             const soma_quantidades = ingredientes.reduce((total, ingrediente) => {
                 if (ingrediente.quantidade === null || ingrediente.quantidade === undefined) {
@@ -366,13 +374,6 @@ module.exports = {
                 }
                 return total + ingrediente.quantidade;
             }, 0);
-    
-            // Consultar a batida da ração
-            const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
-    
-            if (!batida_racao || soma_quantidades !== batida_racao[0].batida) {
-                return response.status(400).json({ message: 'A soma das quantidades dos ingredientes não coincide com a batida da ração.' });
-            }
     
             for (const ingrediente of ingredientes) {
                 const { id_ingrediente, quantidade } = ingrediente;
@@ -386,6 +387,11 @@ module.exports = {
                 await mysql.query(query, [quantidade, id_racao, id_ingrediente]);
             }
     
+            // Recalcule a batida da ração após a atualização dos ingredientes
+            const [nova_batida] = await mysql.execute('SELECT SUM(quantidade) AS batida FROM ingrediente_racao WHERE id_racao = ?', [id_racao]);
+    
+            await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida[0].batida, id_racao]);
+    
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 8, `O usuário ${decodedToken.nome} alterou a fórmula da ração ${id_racao}`]);
             return response.status(200).json({ message: 'Ingredientes atualizados na ração com sucesso!' });
         } catch (error) {
@@ -395,21 +401,45 @@ module.exports = {
             }
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },     
-
+    },
+    
     deleteIngredienteFromRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
-            const { id_racao, id_ingrediente } = request.body;
+    
+            const id_racao = request.params;
+            const { id_ingrediente } = request.body;
+    
+            // Obtém a quantidade do ingrediente a ser removido
+            const [quantidadeIngrediente] = await mysql.execute('SELECT quantidade FROM ingrediente_racao WHERE id_racao = ? AND id_ingrediente = ?', [id_racao, id_ingrediente]);
+    
+            if (!quantidadeIngrediente) {
+                return response.status(400).json({ message: 'Ingrediente não encontrado na ração.' });
+            }
+    
+            const quantidadeRemovida = quantidadeIngrediente[0].quantidade;
     
             const query =
                 `DELETE FROM ingrediente_racao
                 WHERE id_racao = ? AND id_ingrediente = ?`;
     
             await mysql.query(query, [id_racao, id_ingrediente]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 9, `O usuário ${decodedToken.nome} deletou o ingrediente ${id_ingrediente} da fórmula da ração ${id_racao}`]);         
+    
+            // Consulta a batida atual da ração
+            const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
+    
+            if (!batida_racao) {
+                return response.status(400).json({ message: 'Ração não encontrada.' });
+            }
+    
+            // Calcula a nova batida da ração com base na remoção do ingrediente
+            const nova_batida = parseFloat((batida_racao[0].batida - quantidadeRemovida).toFixed(2));
+    
+            // Atualiza a batida da ração no banco de dados com a nova batida calculada
+            await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
+    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 9, `O usuário ${decodedToken.nome} deletou o ingrediente ${id_ingrediente} da fórmula da ração ${id_racao}`]);
             return response.status(200).json({ message: 'Ingrediente removido da ração com sucesso!' });
         } catch (error) {
             console.error(error);

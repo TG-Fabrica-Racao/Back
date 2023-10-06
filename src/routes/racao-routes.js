@@ -47,7 +47,6 @@ router.post('/create', login.verifyToken, celebrate({
         id_categoria: Joi.number().integer().min(1).required(),
         tipo_racao: Joi.string().valid('Produção própria', 'Comprada', 'Ambos').required(),
         fase_utilizada: Joi.number().integer().min(1).required(),
-        batida: Joi.number().integer().min(1).required(),
         estoque_minimo: Joi.number().integer().min(1).required(),
         ingredientes: Joi.array().items(Joi.object({
             id_ingrediente: Joi.number().integer().min(1).required(),
@@ -56,26 +55,32 @@ router.post('/create', login.verifyToken, celebrate({
     })
 }), racaoController.createRacao);
 
-router.post('/insert-ingredientes', login.verifyToken, celebrate({
+router.post('/insert-ingredientes/:id_racao', login.verifyToken, celebrate({
+    [Segments.PARAMS]: Joi.object({
+        id_racao: Joi.number().integer().min(1).required()
+    }),
     [Segments.BODY]: Joi.array().items(Joi.object().keys({
-        id_racao: Joi.number().integer().min(1).required(),
         id_ingrediente: Joi.number().integer().min(1).required(),
         quantidade: Joi.number().integer().min(1).required(),
     }))
 }), racaoController.insertIngredienteInRacao);
 
-router.patch('/update-ingredientes', login.verifyToken, celebrate({
+router.patch('/update-ingredientes/:id_racao', login.verifyToken, celebrate({
+    [Segments.PARAMS]: Joi.object({
+        id_racao: Joi.number().integer().min(1).required()
+    }),
     [Segments.BODY]: Joi.array().items(Joi.object().keys({
         id_ingrediente: Joi.number().integer().min(1).required(),
-        id_racao: Joi.number().integer().min(1).required(),
         quantidade: Joi.number().integer().min(1).required(),
     }))
 }), racaoController.updateIngredienteInRacao);
 
 router.delete('/delete-ingrediente', login.verifyToken, celebrate({
+    [Segments.PARAMS]: Joi.object({
+        id_racao: Joi.number().integer().min(1).required()
+    }),
     [Segments.BODY]: Joi.object().keys({
-        id_racao: Joi.number().integer().min(1).required(),
-        id_ingrediente: Joi.number().integer().min(1).required(),
+        id_ingrediente: Joi.number().integer().min(1).required()
     })
   }), racaoController.deleteIngredienteFromRacao);
 
