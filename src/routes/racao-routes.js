@@ -84,7 +84,7 @@ router.patch('/update-ingredientes/:id_racao', login.verifyToken, celebrate({
     }))
 }), racaoController.updateIngredienteInRacao);
 
-router.delete('/delete-ingrediente', login.verifyToken, celebrate({
+router.delete('/delete-ingrediente/:id_racao', login.verifyToken, celebrate({
     [Segments.PARAMS]: Joi.object({
         id_racao: Joi.number().integer().min(1).required()
     }),

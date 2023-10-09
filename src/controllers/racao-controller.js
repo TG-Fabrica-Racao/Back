@@ -463,13 +463,13 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
     
-            const id_racao = request.params;
+            const id_racao = request.params.id_racao; // Access the id_racao from request.params
             const { id_ingrediente } = request.body;
     
-            // Obtém a quantidade do ingrediente a ser removido
+            // Obtain the quantity of the ingredient to be removed
             const [quantidadeIngrediente] = await mysql.execute('SELECT quantidade FROM ingrediente_racao WHERE id_racao = ? AND id_ingrediente = ?', [id_racao, id_ingrediente]);
     
-            if (!quantidadeIngrediente) {
+            if (!quantidadeIngrediente || quantidadeIngrediente.length === 0) {
                 return response.status(400).json({ message: 'Ingrediente não encontrado na ração.' });
             }
     
@@ -481,17 +481,17 @@ module.exports = {
     
             await mysql.query(query, [id_racao, id_ingrediente]);
     
-            // Consulta a batida atual da ração
+            // Consult the current batida of the ração
             const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
     
-            if (!batida_racao) {
+            if (!batida_racao || batida_racao.length === 0) {
                 return response.status(400).json({ message: 'Ração não encontrada.' });
             }
     
-            // Calcula a nova batida da ração com base na remoção do ingrediente
+            // Calculate the new batida of the ração based on the removal of the ingredient
             const nova_batida = parseFloat((batida_racao[0].batida - quantidadeRemovida).toFixed(2));
     
-            // Atualiza a batida da ração no banco de dados com a nova batida calculada
+            // Update the batida of the ração in the database with the calculated new batida
             await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
     
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 9, `O usuário ${decodedToken.nome} deletou o ingrediente ${id_ingrediente} da fórmula da ração ${id_racao}`]);
@@ -500,7 +500,8 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },
+    
 
     comprarRacao: async (request, response) => {
         try {
