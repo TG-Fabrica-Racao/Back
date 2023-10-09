@@ -41,6 +41,15 @@ router.get('/', login.verifyToken, celebrate({
     })
 }), racaoController.getAllRacoes);
 
+router.get('/compradas', login.verifyToken, celebrate({
+    [Segments.QUERY]: Joi.object().keys({
+        id: Joi.number().integer().allow('').optional(),
+        nome: Joi.string().max(100).allow('').optional(),
+        categoria: Joi.string().max(100).allow('').optional(),
+        fase_utilizada: Joi.string().max(100).allow('').optional()
+    })
+}), racaoController.getRacoesCompradas);
+
 router.post('/create', login.verifyToken, celebrate({
     [Segments.BODY]: Joi.object().keys({
         nome: Joi.string().min(3).max(100).required(),

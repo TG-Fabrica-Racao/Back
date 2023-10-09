@@ -64,7 +64,62 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },   
+    
+    getRacoesCompradas: async (request, response) => {
+        try {
+            const { id, nome, categoria, fase_utilizada } = request.query;
+            
+            const params = [];
+
+            let where = "WHERE 1=1 AND racoes.tipo_racao = 'Comprada'";
+    
+            if (id) {
+                where += " AND racoes.id = ?";
+                params.push(id);
+            }
+    
+            if (nome) {
+                where += " AND racoes.nome LIKE ?";
+                params.push(`%${nome}%`);
+            }
+    
+            if (categoria) {
+                where += " AND categorias.nome LIKE ?";
+                params.push(`%${categoria}%`);
+            }
+    
+            if (fase_utilizada) {
+                where += " AND fases_granja.nome LIKE ?";
+                params.push(`%${fase_utilizada}%`);
+            }
+    
+            const query = `
+                    SELECT
+                        racoes.id,
+                        racoes.nome,
+                        categorias.id AS id_categoria,
+                        categorias.nome AS categoria,
+                        racoes.tipo_racao,
+                        fases_granja.nome AS fase_utilizada,
+                        racoes.batida,
+                        racoes.estoque_minimo,
+                        COALESCE(racoes.estoque_atual, 0) AS estoque_atual
+                FROM racoes
+                INNER JOIN categorias ON racoes.id_categoria = categorias.id
+                INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
+                ${where}
+                GROUP BY racoes.id, racoes.nome, categorias.id, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida, racoes.estoque_minimo, racoes.estoque_atual;
+                `;
+    
+            const [result] = await mysql.execute(query, params);
+            return response.status(200).json(result);
+
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    },
     
     historicoCompras: async (request, response) => {
         try {
