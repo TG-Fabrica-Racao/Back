@@ -213,6 +213,7 @@ module.exports = {
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
             const { id_ingrediente, 
+                    data_compra,
                     quantidade_bruta, 
                     pre_limpeza, 
                     valor_unitario, 
@@ -223,7 +224,7 @@ module.exports = {
                 `INSERT INTO compras_ingrediente
                     (data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor)
                 VALUES
-                    (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)`;
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
             
             const quantidade_liquida = quantidade_bruta - pre_limpeza;
             const valor_total = quantidade_bruta * valor_unitario;
@@ -235,7 +236,7 @@ module.exports = {
             }
 
             const novo_estoque = ingrediente[0].estoque_atual + quantidade_liquida;
-            const [result] = await mysql.execute(query, [id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
+            const [result] = await mysql.execute(query, [id_ingrediente, data_compra, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_ingrediente]);
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });

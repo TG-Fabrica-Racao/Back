@@ -87,6 +87,7 @@ router.delete('/delete-ingrediente', login.verifyToken, celebrate({
 router.post('/comprar', login.verifyToken, roles.adminRole, celebrate({
     [Segments.BODY]: Joi.object().keys({
         id_racao: Joi.number().integer().min(1).required(),
+        data_compra: Joi.date().required(),
         quantidade: Joi.number().integer().min(1).required(),
         valor_unitario: Joi.number().min(1).required(),
         numero_nota: Joi.string().min(3).max(100).required(),
