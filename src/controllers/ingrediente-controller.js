@@ -16,7 +16,7 @@ module.exports = {
                     grupos.id AS id_grupo,	
                     grupos.nome AS grupo,
                     ingredientes.estoque_minimo,
-                    COALESCE(ingredientes.estoque_atual, 0) AS estoque_atual
+                    ingredientes.estoque_atual
                 FROM ingredientes
                 INNER JOIN grupos ON ingredientes.id_grupo = grupos.id
             `;
@@ -67,7 +67,7 @@ module.exports = {
             let query = `
                 SELECT
                     compras_ingrediente.id,
-                    CONVERT_TZ(compras_ingrediente.data_compra, 'UTC', 'America/Sao_Paulo') AS data_compra_brasilia,
+                    compras_ingrediente.data_compra,
                     ingredientes.nome AS ingrediente,
                     compras_ingrediente.quantidade_bruta,
                     compras_ingrediente.pre_limpeza,
@@ -191,6 +191,12 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
+            const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [request.params.id]);
+
+            if (!ingrediente || ingrediente.length === 0) {
+            return response.status(404).json({ message: 'Ingrediente não encontrado' });
+        }
+
             const { nome, id_grupo, estoque_minimo } = request.body;
 
             const query = 
@@ -211,7 +217,7 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
+    
             const { id_ingrediente, 
                     data_compra,
                     quantidade_bruta, 
@@ -219,33 +225,36 @@ module.exports = {
                     valor_unitario, 
                     numero_nota, 
                     fornecedor  } = request.body;
-
+    
             const query = 
                 `INSERT INTO compras_ingrediente
                     (data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor)
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
             
-            const quantidade_liquida = quantidade_bruta - pre_limpeza;
-            const valor_total = quantidade_bruta * valor_unitario;
-
+            const quantidade_liquida = parseFloat(quantidade_bruta) - parseFloat(pre_limpeza);
+            const valor_total = parseFloat(quantidade_bruta) * parseFloat(valor_unitario);
+    
             const [ingrediente] = await mysql.execute('SELECT estoque_atual FROM ingredientes WHERE id = ?', [id_ingrediente]);
-
+    
             if (!ingrediente) {
                 return response.status(404).json({ message: 'Ingrediente não encontrado' });
             }
-
-            const novo_estoque = ingrediente[0].estoque_atual + quantidade_liquida;
+    
+            const novo_estoque = (parseFloat(ingrediente[0].estoque_atual) + quantidade_liquida).toFixed(2); // Arredonde para 2 casas decimais
+            console.log(novo_estoque);
+    
             const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
-            await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_ingrediente]);
+            await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [parseFloat(novo_estoque), id_ingrediente]); // Converta o novo_estoque para float antes de atualizar no banco de dados
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
     },
-
+    
+    
     acertarEstoque: async (request, response) => {
         try {
             const token = request.header('Authorization');

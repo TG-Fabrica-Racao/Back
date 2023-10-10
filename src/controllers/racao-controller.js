@@ -47,7 +47,7 @@ module.exports = {
                         fases_granja.nome AS fase_utilizada,
                         racoes.batida,
                         racoes.estoque_minimo,
-                        COALESCE(racoes.estoque_atual, 0) AS estoque_atual,
+                        racoes.estoque_atual,
                         JSON_ARRAYAGG(JSON_OBJECT('id', i.id, 'nome', i.nome, 'quantidade', ir.quantidade)) AS ingredientes
                 FROM racoes
                 INNER JOIN categorias ON racoes.id_categoria = categorias.id
@@ -104,7 +104,7 @@ module.exports = {
                         fases_granja.nome AS fase_utilizada,
                         racoes.batida,
                         racoes.estoque_minimo,
-                        COALESCE(racoes.estoque_atual, 0) AS estoque_atual
+                        racoes.estoque_atual
                 FROM racoes
                 INNER JOIN categorias ON racoes.id_categoria = categorias.id
                 INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
@@ -128,7 +128,7 @@ module.exports = {
             let query = `
                 SELECT
                     compras_racao.id,
-                    CONVERT_TZ(compras_racao.data_compra, 'UTC', 'America/Sao_Paulo') AS data_compra_brasilia,
+                    compras_racao.data_compra
                     racoes.nome AS racao,
                     compras_racao.quantidade,
                     compras_racao.valor_unitario,
@@ -142,13 +142,13 @@ module.exports = {
             const params = [];
     
             if (data_inicial && data_final) {
-                query += ' WHERE CONVERT_TZ(compras_racao.data_compra, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
+                query += ' WHERE compras_racao.data_compra BETWEEN ? AND ?';
                 params.push(data_inicial, data_final);
             } else if (data_inicial) {
-                query += ' WHERE CONVERT_TZ(compras_racao.data_compra, "UTC", "America/Sao_Paulo") >= ?';
+                query += ' WHERE compras_racao.data_compra >= ?';
                 params.push(data_inicial);
             } else if (data_final) {
-                query += ' WHERE CONVERT_TZ(compras_racao.data_compra, "UTC", "America/Sao_Paulo") <= ?';
+                query += ' WHERE compras_racao.data_compra <= ?';
                 params.push(data_final);
             }
     
@@ -269,6 +269,12 @@ module.exports = {
             
             const { nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, ingredientes } = request.body;
     
+            const [racao] = await mysql.execute('SELECT * FROM racoes WHERE nome = ?', [nome]);
+
+            if (racao.length > 0) {
+                return response.status(400).json({ message: 'Ração já cadastrada' });
+            }
+
             let batida = 0; // Inicializa a batida como zero
     
             if (Array.isArray(ingredientes) && ingredientes.length > 0) {
@@ -322,29 +328,23 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
-            const { nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo } = request.body;
-
-            if (tipo_racao === "Comprada") {
-                const query =
-                    `UPDATE racoes
-                        SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?, estoque_minimo = ?
-                    WHERE id = ?`;
     
-                await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, request.params.id]);
-            } else {
-                const query =
-                `UPDATE racoes
-                    SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?
-                WHERE id = ?`;
-
-                if (!request.params.id) {
-                    return response.status(400).json({ message: 'Requisição inválida. Forneça o id da ração' });
-                }
-
-                await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, request.params.id]);
-            }
+            const { nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo } = request.body;
             
+            // Verifique se o tipo de ração foi alterado para "Comprada"
+            if (tipo_racao === "Comprada") {
+                // Se sim, apague a batida e os ingredientes relacionados à ração
+                await mysql.query('DELETE FROM ingrediente_racao WHERE id_racao = ?', [request.params.id]);
+                await mysql.query('UPDATE racoes SET batida = NULL WHERE id = ?', [request.params.id]);
+            }
+    
+            const query =
+                `UPDATE racoes
+                    SET nome = ?, id_categoria = ?, tipo_racao = ?, fase_utilizada = ?, estoque_minimo = ?
+                WHERE id = ?`;
+    
+            await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, request.params.id]);
+    
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `O usuário ${decodedToken.nome} atualizaou a ração ${nome}`]);        
             return response.status(200).json({ message: 'Ração atualizada com sucesso!' });
         } catch (error) {
@@ -371,17 +371,28 @@ module.exports = {
             // Obtém a batida atual da ração no banco de dados
             const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
     
-            if (!batida_racao) {
-                return response.status(400).json({ message: 'Ração não encontrada.' });
+            if (!batida_racao || !batida_racao[0]) {
+                return response.status(400).json({ message: 'Ração não encontrada' });
             }
-    
-            // Calcula a nova batida da ração com base nas quantidades dos ingredientes
-            const nova_batida = parseFloat((batida_racao[0].batida + soma_quantidades));
     
             const values = [];
     
             for (const ingrediente of ingredientes) {
                 const { id_ingrediente, quantidade } = ingrediente;
+    
+                // Verifica se o ingrediente já está cadastrado na ração
+                const [existingIngredient] = await mysql.execute('SELECT * FROM ingrediente_racao WHERE id_racao = ? AND id_ingrediente = ?', [id_racao, id_ingrediente]);
+    
+                if (existingIngredient && existingIngredient[0]) {
+                    return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} já cadastrado na ração.` });
+                }
+    
+                // Verifica se o ingrediente existe no banco de dados
+                const [ingredientExists] = await mysql.execute('SELECT id FROM ingredientes WHERE id = ?', [id_ingrediente]);
+    
+                if (!ingredientExists || !ingredientExists[0]) {
+                    return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} não encontrado` });
+                }
     
                 const query =
                     `INSERT INTO ingrediente_racao
@@ -393,6 +404,9 @@ module.exports = {
                 values.push(result.values);
             }
     
+            // Calcula a nova batida da ração com base nas quantidades dos ingredientes como um número de ponto flutuante
+            const nova_batida = parseFloat(batida_racao[0].batida) + soma_quantidades;
+    
             // Atualiza a batida da ração no banco de dados com a nova batida calculada
             await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
     
@@ -403,7 +417,7 @@ module.exports = {
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
     },    
-
+    
     updateIngredienteInRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
@@ -415,12 +429,6 @@ module.exports = {
             if (!Array.isArray(ingredientes) || ingredientes.length === 0) {
                 return response.status(400).json({ message: 'Requisição inválida. Forneça uma matriz de ingredientes para atualizar.' });
             }
-    
-            // Verificar se todos os ingredientes têm o mesmo id_racao
-            const idRacaoSet = new Set(ingredientes.map(ingrediente => ingrediente.id_racao));
-            if (idRacaoSet.size !== 1) {
-                return response.status(400).json({ message: 'Todos os ingredientes devem pertencer à mesma ração.' });
-            }
             
             // Calcular a soma das quantidades dos ingredientes a serem atualizados
             const soma_quantidades = ingredientes.reduce((total, ingrediente) => {
@@ -430,8 +438,26 @@ module.exports = {
                 return total + ingrediente.quantidade;
             }, 0);
     
+            // Verificar se a ração existe
+            const [raoExists] = await mysql.execute('SELECT id FROM racoes WHERE id = ?', [id_racao]);
+            if (!raoExists || raoExists.length === 0) {
+                return response.status(400).json({ message: 'Ração não encontrada.' });
+            }
+    
             for (const ingrediente of ingredientes) {
                 const { id_ingrediente, quantidade } = ingrediente;
+
+                // Verificar se o ingrediente existe
+                const [ingredientExists] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [id_ingrediente]);
+                if (!ingredientExists || ingredientExists.length === 0) {
+                    return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} não encontrado.` });
+                }
+    
+                // Verificar se o ingrediente está cadastrado na ração
+                const [ingredientInRacao] = await mysql.execute('SELECT * FROM ingrediente_racao WHERE id_racao = ? AND id_ingrediente = ?', [id_racao, id_ingrediente]);
+                if (!ingredientInRacao || ingredientInRacao.length === 0) {
+                    return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} não cadastrado na ração.` });
+                }
     
                 const query = `
                     UPDATE ingrediente_racao
@@ -456,7 +482,7 @@ module.exports = {
             }
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
     
     deleteIngredienteFromRacao: async (request, response) => {
         try {
@@ -466,11 +492,22 @@ module.exports = {
             const id_racao = request.params.id_racao; // Access the id_racao from request.params
             const { id_ingrediente } = request.body;
     
-            // Obtain the quantity of the ingredient to be removed
-            const [quantidadeIngrediente] = await mysql.execute('SELECT quantidade FROM ingrediente_racao WHERE id_racao = ? AND id_ingrediente = ?', [id_racao, id_ingrediente]);
+            // Verificar se a ração existe
+            const [raoExists] = await mysql.execute('SELECT id FROM racoes WHERE id = ?', [id_racao]);
+            if (!raoExists || raoExists.length === 0) {
+                return response.status(400).json({ message: 'Ração não encontrada.' });
+            }
     
+            // Verificar se o ingrediente existe
+            const [ingredientExists] = await mysql.execute('SELECT id FROM ingredientes WHERE id = ?', [id_ingrediente]);
+            if (!ingredientExists || ingredientExists.length === 0) {
+                return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} não encontrado.` });
+            }
+    
+            // Verificar se o ingrediente está cadastrado na fórmula da ração
+            const [quantidadeIngrediente] = await mysql.execute('SELECT quantidade FROM ingrediente_racao WHERE id_racao = ? AND id_ingrediente = ?', [id_racao, id_ingrediente]);
             if (!quantidadeIngrediente || quantidadeIngrediente.length === 0) {
-                return response.status(400).json({ message: 'Ingrediente não encontrado na ração.' });
+                return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} não cadastrado na ração.` });
             }
     
             const quantidadeRemovida = quantidadeIngrediente[0].quantidade;
@@ -481,17 +518,13 @@ module.exports = {
     
             await mysql.query(query, [id_racao, id_ingrediente]);
     
-            // Consult the current batida of the ração
+            // Consultar a batida atual da ração
             const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
     
-            if (!batida_racao || batida_racao.length === 0) {
-                return response.status(400).json({ message: 'Ração não encontrada.' });
-            }
-    
-            // Calculate the new batida of the ração based on the removal of the ingredient
+            // Calcular a nova batida da ração com base na remoção do ingrediente
             const nova_batida = parseFloat((batida_racao[0].batida - quantidadeRemovida).toFixed(2));
     
-            // Update the batida of the ração in the database with the calculated new batida
+            // Atualizar a batida da ração no banco de dados com a nova batida calculada
             await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
     
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 9, `O usuário ${decodedToken.nome} deletou o ingrediente ${id_ingrediente} da fórmula da ração ${id_racao}`]);
@@ -500,9 +533,8 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
     
-
     comprarRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
@@ -563,7 +595,7 @@ module.exports = {
                 return response.status(400).json({ message: 'Essa ração é apenas comprada, portanto não pode ser produzida' });
             }
 
-            if (quantidade < racao[0].quantidade) {
+            if (quantidade < racao[0].batida) {
                 return response.status(400).json({ message: 'A quantidade de ração a ser produzida deve ser maior ou igual à batida da ração' });
             }
     

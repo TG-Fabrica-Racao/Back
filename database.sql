@@ -66,8 +66,8 @@ CREATE TABLE IF NOT EXISTS ingredientes (
     id INT AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
     id_grupo INT NOT NULL,
-    estoque_minimo FLOAT NOT NULL,
-    estoque_atual FLOAT,
+    estoque_minimo DECIMAL(10, 2) NOT NULL,
+    estoque_atual DECIMAL(10, 2) DEFAULT 0.00,
     PRIMARY KEY (id),
     FOREIGN KEY (id_grupo) REFERENCES grupos (id)
 );
@@ -78,9 +78,9 @@ CREATE TABLE IF NOT EXISTS racoes (
     id_categoria INT NOT NULL,
     tipo_racao ENUM ('Produção própria', 'Comprada', 'Ambos') NOT NULL, 
     fase_utilizada INT NOT NULL,
-    batida FLOAT,
-    estoque_minimo FLOAT NOT NULL,
-    estoque_atual FLOAT,
+    batida DECIMAL(10, 2) DEFAULT 0.00,
+    estoque_minimo DECIMAL(10, 2) NOT NULL,
+    estoque_atual DECIMAL(10, 2),
     PRIMARY KEY (id),
     FOREIGN KEY (id_categoria) REFERENCES categorias (id),
     FOREIGN KEY (fase_utilizada) REFERENCES fases_granja (id)
@@ -96,28 +96,28 @@ CREATE TABLE IF NOT EXISTS ingrediente_racao (
 
 CREATE TABLE IF NOT EXISTS compras_ingrediente (
 	id INT AUTO_INCREMENT,
-    data_compra DATETIME NOT NULL,
+    data_compra DATE NOT NULL,
     id_ingrediente INT NOT NULL,
-    quantidade_bruta FLOAT NOT NULL,
-    pre_limpeza FLOAT NOT NULL,
-    quantidade_liquida FLOAT NOT NULL,
-    valor_unitario FLOAT NOT NULL,
-    valor_total FLOAT NOT NULL,
-    numero_nota FLOAT NOT NULL,
-    fornecedor FLOAT NOT NULL,
+    quantidade_bruta DECIMAL(10, 2) NOT NULL,
+    pre_limpeza DECIMAL(10, 2) NOT NULL,
+    quantidade_liquida DECIMAL(10, 2) NOT NULL,
+    valor_unitario DECIMAL(10, 2) NOT NULL,
+    valor_total DECIMAL(10, 2) NOT NULL,
+    numero_nota VARCHAR(50) NOT NULL,
+    fornecedor VARCHAR(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id)
 );
 
 CREATE TABLE IF NOT EXISTS compras_racao (
 	id INT AUTO_INCREMENT,
-    data_compra DATETIME NOT NULL,
+    data_compra DATE NOT NULL,
     id_racao INT NOT NULL,
-    quantidade FLOAT NULL,
-    valor_unitario FLOAT NOT NULL,
-    valor_total FLOAT NOT NULL,
-    numero_nota FLOAT NOT NULL,
-    fornecedor FLOAT NOT NULL,
+    quantidade DECIMAL(10, 2) NULL,
+    valor_unitario DECIMAL(10, 2) NOT NULL,
+    valor_total DECIMAL(10, 2) NOT NULL,
+    numero_nota VARCHAR(50) NOT NULL,
+    fornecedor VARCHAR(50) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id)
 );
@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS producao_racao (
     id_racao INT NOT NULL,
     data_producao DATETIME NOT NULL,
     id_usuario INT NOT NULL,
-    quantidade FLOAT NOT NULL,
+    quantidade DECIMAL(10, 2) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id),
     FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS acerto_estoque (
     id_racao INT,
     data_acerto DATETIME NOT NULL,
     id_usuario INT NOT NULL,
-    quantidade FLOAT NOT NULL,
+    quantidade DECIMAL(10, 2) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id),
     FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id),
@@ -197,11 +197,11 @@ BEGIN
     DECLARE index_loop INT;
     DECLARE index_loop2 INT;
     DECLARE id_racao_update INT;
-    DECLARE quantidade_ingrediente_batida FLOAT;
-    DECLARE quantidade_ingrediente FLOAT;
-    DECLARE quantidade_total FLOAT;
-    DECLARE novo_estoque FLOAT;
-    DECLARE estoque_agora FLOAT;
+    DECLARE quantidade_ingrediente_batida DECIMAL(10, 2);
+    DECLARE quantidade_ingrediente DECIMAL(10, 2);
+    DECLARE quantidade_total DECIMAL(10, 2);
+    DECLARE novo_estoque DECIMAL(10, 2);
+    DECLARE estoque_agora DECIMAL(10, 2);
     DECLARE cursor_ingredientes CURSOR FOR
         SELECT id_ingrediente
         FROM ingrediente_racao

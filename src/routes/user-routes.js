@@ -9,7 +9,6 @@ const router = express.Router();
 router.get('/logs', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
         nome_usuario: Joi.string().max(100).allow('').optional(),
-        data: Joi.date().iso(),
         data_inicial: Joi.date().iso().allow('').optional(),
         data_final: Joi.date().iso().allow('').optional(),
     })
@@ -25,7 +24,7 @@ router.get('/', login.verifyToken, roles.adminRole, celebrate({
     })
 }), userController.getAllUsers);
 
-router.post('/create', login.verifyToken, roles.adminRole, celebrate({
+router.post('/create', celebrate({
     [Segments.BODY]: Joi.object().keys({
         nome: Joi.string().min(3).max(100).required(),
         email: Joi.string().email().min(3).max(100).required(),
@@ -51,7 +50,7 @@ router.patch('/update/:id', login.verifyToken, roles.adminRole, celebrate({
         nome: Joi.string().min(3).max(100).required(),
         email: Joi.string().email().min(3).max(100).required(),
         telefone: Joi.string().min(3).max(20).required(),
-        status: Joi.boolean().required(),
+        status_usuario: Joi.string().valid('Ativo', 'Inativo').required(),
         cargo: Joi.string().valid('Administrador', 'Funcionário').required(),
     })
 }), userController.updateUser);

@@ -8,17 +8,17 @@ const router = express.Router();
 
 router.get('/historico-compras', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        data_inicial: Joi.date().allow('').optional(),
-        data_final: Joi.date().allow('').optional(),
         nome_ingrediente: Joi.string().max(100).allow('').optional(),
+        data_inicial: Joi.date().allow('').optional(),
+        data_final: Joi.date().allow('').optional()
     })
 }), ingredienteController.historicoCompras);
 
 router.get('/acertos-estoque', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
+        nome_ingrediente: Joi.string().max(100).allow('').optional(),
         data_inicial: Joi.date().allow('').optional(),
         data_final: Joi.date().allow('').optional(),
-        nome_ingrediente: Joi.string().max(100).allow('').optional()
     })
 }), ingredienteController.historicoAcertoEstoque);
 

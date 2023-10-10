@@ -17,11 +17,7 @@ module.exports = {
                     usuarios.nome,
                     usuarios.email,
                     usuarios.telefone,
-                    CASE
-                        WHEN usuarios.status_usuario = 0 THEN 'Inativo'
-                        WHEN usuarios.status_usuario = 1 THEN 'Ativo'
-                        ELSE 'Desconhecido'
-                    END AS status,
+                    usuarios.status_usuario,
                     usuarios.cargo
                 FROM usuarios
                 WHERE 1=1`;
@@ -68,7 +64,7 @@ module.exports = {
             let query = `
                 SELECT 
                     registros.id, 
-                    CONVERT_TZ(registros.data_registro, 'UTC', 'America/Sao_Paulo') AS data_registro_brasilia,
+                    registros.data_registro,
                     usuarios.id AS id_usuario, 
                     usuarios.nome AS usuario,
                     acoes.id AS id_acao,
@@ -88,13 +84,13 @@ module.exports = {
             }
     
             if (data_inicial && data_final) {
-                query += ' AND CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") BETWEEN ? AND ?';
+                query += ' AND registros.data_registro BETWEEN ? AND ?';
                 params.push(data_inicial, data_final);
             } else if (data_inicial) {
-                query += ' AND CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") >= ?';
+                query += ' AND registros.data_registro >= ?';
                 params.push(data_inicial);
             } else if (data_final) {
-                query += ' AND CONVERT_TZ(registros.data_registro, "UTC", "America/Sao_Paulo") <= ?';
+                query += ' AND registros.data_registro <= ?';
                 params.push(data_final);
             }
     
@@ -112,8 +108,8 @@ module.exports = {
 
             const [usuario_existente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
 
-            if (usuario_existente.length > 0) {
-                return response.status(409).json({ message: 'Este e-mail já está cadastrado' });
+            if (usuario_existente.affectedRows > 0) {
+                return response.status(409).json({ message: 'Este usuário já está cadastrado' });
             }
 
             const senha = 'senha123'
@@ -141,7 +137,7 @@ module.exports = {
 
             const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
 
-            if (result.length === 0) {
+            if (result.affectedRows === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
 
@@ -271,7 +267,7 @@ module.exports = {
     
             const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
     
-            if (!result || result.length === 0) {
+            if (!result || result.affectedRows === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
     
@@ -318,7 +314,7 @@ module.exports = {
 
             const [result] = await mysql.execute(query, [nome, email, telefone, status, cargo, request.params.id]);
 
-            if (!result || result.length === 0) {
+            if (!result || result.affectedRows === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
 
@@ -333,12 +329,12 @@ module.exports = {
         try {
             const query = 
                 `UPDATE usuarios
-                SET status_usuario = 0
+                SET status_usuario = "Inativo"
                 WHERE id = ?`;
     
             const [result] = await mysql.execute(query, [request.params.id]);
     
-            if (!result || result.length === 0) {
+            if (result.affectedRows === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
     
@@ -353,12 +349,12 @@ module.exports = {
         try {
             const query = 
                 `UPDATE usuarios
-                SET status_usuario = 1
+                SET status_usuario = "Ativo"
                 WHERE id = ?`;
     
             const [result] = await mysql.execute(query, [request.params.id]);
     
-            if (!result || result.length === 0) {
+            if (result.affectedRows === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
     
@@ -369,6 +365,7 @@ module.exports = {
         }
     },
     
+    
     deleteUser: async (request, response) => {
         try {
             const query = 
@@ -377,7 +374,7 @@ module.exports = {
     
             const [result] = await mysql.execute(query, [request.params.id]);
     
-            if (!result || result.length === 0) {
+            if (!result || result.affectedRows === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
     

@@ -65,17 +65,17 @@
                             "application/json": {
                                 "example": [
                                     {
-                                        "id_usuario": 1,
-                                        "nome": "Usuário 1",
-                                        "email": "usuario1@email.com",
+                                        "id": 1,
+                                        "nome": "Felipe",
+                                        "email": "felipe@gmail.com",
                                         "telefone": "(14) 1234 - 5678",
                                         "status_usuario": "Ativo",
                                         "cargo": "Administrador"
                                     },
                                     {
-                                        "id_usuario": 2,
-                                        "nome": "Usuário 2",
-                                        "email": "usuario2@email.com",
+                                        "id": 2,
+                                        "nome": "Matheus",
+                                        "email": "matheus@gmail.com",
                                         "telefone": "(41) 5678 - 1234",
                                         "status_usuario": "Inativo",
                                         "cargo": "Funcionário"
@@ -140,6 +140,9 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
                     "500": {
                         "description": "Erro interno do servidor"
                     }
@@ -186,12 +189,12 @@
                                 "properties": {
                                     "nome": {
                                         "type": "string",
-                                        "example": "Nome do usuário"
+                                        "example": "João"
                                     },
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "usuario@example.com"
+                                        "example": "joao@outlook.com"
                                     },
                                     "telefone": {
                                         "type": "string",
@@ -218,6 +221,9 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
                     "409": {
                         "description": "Este usuário já está cadastrado"
                     },
@@ -242,11 +248,11 @@
                                     "email": {
                                         "type": "string",
                                         "format": "email",
-                                        "example": "rodolfo@example.com"
+                                        "example": "rodolfo@yahoo.combr"
                                     },
                                     "senha": {
                                         "type": "string",
-                                        "example": "12345"
+                                        "example": "senha123"
                                     }
                                 },
                                 "required": ["email", "senha"]
@@ -266,6 +272,9 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
                     "401": {
                         "description": "Usuário ou senha inválidos"
                     },
@@ -277,21 +286,72 @@
                     }
                 }
             }
-        },        
-        "/users/update-password/{id}": {
+        },      
+        "/users/update/{id}": {
+            "patch": {
+                "summary": "Rota responsável por atualizar um usuário",
+                "tags": ["Usuários"],
+                "requestBody": {
+                    "description": "Dados para atualizar o usuário",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Jhonas"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "jhonas@gmail.com"
+                                    },
+                                    "telefone": {
+                                        "type": "string",
+                                        "example": "(18) 5322 - 1900"
+                                    },
+                                    "status_usuario": {
+                                        "type": "string",
+                                        "example": "Inativo"
+                                    },
+                                    "cargo": {
+                                        "type": "string",
+                                        "example": "Funcionário"
+                                    }
+                                },
+                                "required": ["nome", "email", "telefone", "status_usuario", "cargo"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Usuário atualizado com sucesso"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "404": {
+                        "description": "Usuário não encontrado"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/users/update-password": {
             "patch": {
                 "summary": "Rota responsável por atualizar a senha do usuário",
                 "tags": ["Usuários"],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
                 "requestBody": {
                     "description": "Dados para atualizar a senha do usuário",
                     "required": true,
@@ -330,7 +390,7 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida",
+                        "description": "Erro nos parâmetros de entrada",
                         "content": {
                             "application/json": {
                                 "example": {
@@ -340,7 +400,7 @@
                         }
                     },
                     "401": {
-                        "description": "Senha atual inválida"
+                        "description": "Senha atual inválida / A nova senha deve ser diferente da atual"
                     },
                     "404": {
                         "description": "Usuário não encontrado"
@@ -367,7 +427,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Usuário desabilitado com sucesso"
+                        "description": "Usuário desativado com sucesso"
                     },
                     "404": {
                         "description": "Usuário não encontrado"
@@ -394,7 +454,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Usuário habilitado com sucesso"
+                        "description": "Usuário ativado com sucesso"
                     },
                     "404": {
                         "description": "Usuário não encontrado"
@@ -425,12 +485,6 @@
                     },
                     "400": {
                         "description": "Erro nos parâmetros de entrada"
-                    },
-                    "401": {
-                        "description": "Token de autenticação ausente"
-                    },
-                    "403": {
-                        "description": "Token inválido"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -478,13 +532,17 @@
                                         "id": 1,
                                         "nome": "Milho",
                                         "id_grupo": 8,
-                                        "estoque_minimo": 1000
+                                        "grupo": "Milho/sorgo",
+                                        "estoque_minimo": 1000,
+                                        "estoque_atual": 10000.00
                                     },
                                     {
                                         "id": 2,
-                                        "nome": "Trigo",
-                                        "id_grupo": 8,
-                                        "estoque_minimo": 800
+                                        "nome": "Farinha",
+                                        "id_grupo": 7,
+                                        "grupo": "Micro nutrientes",
+                                        "estoque_minimo": 2000, 
+                                        "estoque_atual": 5000.00
                                     }
                                 ]
                             }
@@ -504,6 +562,14 @@
                 "summary": "Rota responsável por retornar o histórico de compras dos ingredientes",
                 "tags": ["Ingredientes"],
                 "parameters": [
+                    {
+                        "name": "nome_ingrediente",
+                        "in": "query",
+                        "description": "Nome do ingrediente para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
                     {
                         "name": "data_inicial",
                         "in": "query",
@@ -529,17 +595,22 @@
                                 "example": [
                                     {
                                         "id": 1,
-                                        "data_compra": "2023-08-29",
-                                        "id_ingrediente": 1,
-                                        "quantidade_bruta": 10000,
-                                        "pre_limpeza": 300,
-                                        "valor_unitario": 1.90,
-                                        "numero_nota": "1498559",
-                                        "fornecedor": "Vitamix"
+                                        "data_compra": "2023-09-11",
+                                        "ingrediente": "Milho",
+                                        "quantidade_bruta": "100000.00",
+                                        "pre_limpeza": "0.00",
+                                        "quantidade_liquida": "100000.00",
+                                        "valor_unitario": "4.90",
+                                        "valor_total": "490000.00",
+                                        "numero_nota": "123456789",
+                                        "fornecedor": "Arlindo"
                                     }
                                 ]
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -653,7 +724,7 @@
                         }
                     },
                     "400": {
-                        "description": "Erro nos parâmetros de entrada"
+                        "description": "Ingrediente já cadastrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -767,7 +838,7 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id do ingrediente e a quantidade a ser acertada"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -799,11 +870,11 @@
                                 "properties": {
                                     "nome": {
                                         "type": "string",
-                                        "example": "Farinha láctea"
+                                        "example": "Farinha"
                                     },
                                     "id_grupo": {
                                         "type": "integer",
-                                        "example": 5
+                                        "example": 7
                                     },
                                     "estoque_minimo": {
                                         "type": "number",
@@ -827,7 +898,7 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id da ingrediente"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -861,7 +932,7 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id do ingrediente"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -905,6 +976,14 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "tipo_racao",
+                        "in": "query",
+                        "description": "Tipo da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -915,21 +994,44 @@
                                 "example": [
                                     {
                                         "id": 1,
-                                        "nome": "Ração 1",
-                                        "categoria": "Categoria 1",
-                                        "fase_utilizada": "Fase 1",
-                                        "tipo_racao": "Produção Própria",
-                                        "batida": 800,
-                                        "ingredientes_e_quantidades": "Ingrediente 1 (500Kg), Ingrediente 2 (300Kg)"
+                                        "nome": "Ração 01",
+                                        "id_categoria": 1,
+                                        "categoria": "Pré-inicial",
+                                        "tipo_racao": "Produção própria",
+                                        "fase_utilizada": "Reprodução",
+                                        "batida": "700",
+                                        "estoque_minimo": "1000.00",
+                                        "estoque_atual": "10000.00",
+                                        "ingredientes": [
+                                            {
+                                                "id": 3,
+                                                "nome": "Ingrediente de teste 02 ",
+                                                "quantidade": 500
+                                            },
+                                            {
+                                                "id": 2,
+                                                "nome": "Ingrediente de teste 01 ",
+                                                "quantidade": 500
+                                            }
+                                        ]
                                     },
                                     {
                                         "id": 2,
-                                        "nome": "Ração 2",
-                                        "categoria": "Categoria 2",
-                                        "fase_utilizada": "Fase 2",
+                                        "nome": "Ração 02",
+                                        "id_categoria": 1,
+                                        "categoria": "Pré-inicial",
                                         "tipo_racao": "Comprada",
-                                        "batida": 1000,
-                                        "ingredientes_e_quantidades": "Ingrediente 3 (600Kg), Ingrediente 4 (400Kg)"
+                                        "fase_utilizada": "Reprodução",
+                                        "batida": null,
+                                        "estoque_minimo": "1000.00",
+                                        "estoque_atual": "0.00",
+                                        "ingredientes": [
+                                            {
+                                                "id": null,
+                                                "nome": null,
+                                                "quantidade": null
+                                            }
+                                        ]
                                     }
                                 ]
                             }
@@ -948,6 +1050,32 @@
             "get": {
                 "summary": "Rota responsável por retornar o histórico de compras das rações",
                 "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "nome_racao",
+                        "in": "query",
+                        "description": "Nome da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "data_inicial",
+                        "in": "query",
+                        "description": "Filtrar histórico de acertos em um determinado período, começando pela data_inicial",
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "data_final",
+                        "in": "query",
+                        "description": "e terminando na data_final. É possível utilizar cada filtro individualmente.",
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Operação bem-sucedida",
@@ -958,15 +1086,18 @@
                                         "id": 1,
                                         "data_compra": "2023-09-04",
                                         "racao": "Ração 1",
-                                        "quantidade": 1000,
-                                        "valor_unitario": 1.5,
-                                        "valor_total": 1500,
+                                        "quantidade": 100000.00,
+                                        "valor_unitario": 77.00,
+                                        "valor_total": 1500.00,
                                         "numero_nota": "12345",
-                                        "fornecedor": "Fornecedor 1"
+                                        "fornecedor": "Vitamix"
                                     }
                                 ]
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1015,14 +1146,14 @@
                                         "ração": "Ração 12",
                                         "data_acerto": "2023-08-09",
                                         "usuario": "Cleber",
-                                        "quantidade": 3000
+                                        "quantidade": 3000.00
                                     },
                                     {
                                         "id": 2,
                                         "ração": "Ração 21",
                                         "data_acerto": "2023-10-10",
                                         "usuario": "Felipe",
-                                        "quantidade": 2000
+                                        "quantidade": 2000.00
                                     }
                                 ]
                             }
@@ -1051,23 +1182,19 @@
                                 "properties": {
                                     "nome": {
                                         "type": "string",
-                                        "example": "Nome da ração"
+                                        "example": "Ração 01"
                                     },
                                     "id_categoria": {
                                         "type": "integer",
                                         "example": 1
                                     },
                                     "tipo_racao": {
-                                        "type": "integer",
-                                        "example": 1
+                                        "type": "string",
+                                        "example": "Produção própria"
                                     },
-                                    "fases_utilizadas": {
+                                    "fase_utilizada": {
                                         "type": "integer",
                                         "example": 3
-                                    },
-                                    "batida": {
-                                        "type": "number",
-                                        "example": 1000
                                     },
                                     "ingredientes": {
                                         "type": "array",
@@ -1104,10 +1231,10 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Ração criada com sucesso"
+                        "description": "Ração cadastrada com sucesso!"
                     },
                     "400": {
-                        "description": "A soma das quantidades dos ingredientes não coincide com a batida da ração"
+                        "description": "Ração já cadastrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1146,19 +1273,15 @@
                                         "example": 3
                                     },
                                     "tipo_racao": {
-                                        "type": "integer",
-                                        "example": 0
+                                        "type": "string",
+                                        "example": "Comprada"
                                     },
                                     "fases_utilizadas": {
                                         "type": "integer",
                                         "example": 2
-                                    },
-                                    "batida": {
-                                        "type": "number", 
-                                        "example": 2000
                                     }
                                 },
-                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "batida"]
+                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas"]
                             }
                         }
                     },
@@ -1167,7 +1290,7 @@
                             "description": "Ração atualizada com sucesso"
                         },
                         "400": {
-                            "description": "Requisição inválida. Forneça o id da ração"
+                            "description": "Erro nos parâmetros de entrada"
                         },
                         "500": {
                             "description": "Erro interno do servidor"
@@ -1275,7 +1398,7 @@
                         "description": "Ingredientes atualizados na ração com sucesso"
                     },
                     "400": {
-                        "description": "A soma das quantidades dos ingredientes não coincide com a batida da ração"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1320,7 +1443,7 @@
                         "description": "Ingrediente removido da ração com sucesso"
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id da ração e o id do ingrediente para remover o ingrediente da ração"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1355,7 +1478,7 @@
                                     },
                                     "valor_unitario": {
                                         "type": "number",
-                                        "example": 1.90
+                                        "example": 90.99
                                     },
                                     "numero_nota": {
                                         "type": "string",
@@ -1415,7 +1538,7 @@
                         "description": "Produção realizada com sucesso"
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id da ração e a quantidade a ser produzida"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1461,7 +1584,7 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id da ingrediente"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1488,7 +1611,7 @@
                         "description": "Ração deletada com sucesso"
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id da ração para deletar a ração"
+                        "description": "Erro nos parâmetros de entrada"
                     },
                     "404": {
                         "description": "Ração não encontrada"
@@ -1575,7 +1698,7 @@
                         "description": "Grupo cadastrado com sucesso"
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o nome do grupo"
+                        "description": "Grupo já cadastrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1619,7 +1742,10 @@
                             "description": "Grupo atualizada com sucesso"
                         },
                         "400": {
-                            "description": "Requisição inválida. Forneça o id do grupo"
+                            "description": "Erro nos parâmetros de entrada"
+                        },
+                        "404": {
+                            "description": "Grupo não encontrado"
                         },
                         "500": {
                             "description": "Erro interno do servidor"
@@ -1654,7 +1780,10 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o id do grupo"
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "404": {
+                        "description": "Grupo não encontrado"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1738,7 +1867,7 @@
                         "description": "Categoria cadastrada com sucesso"
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o nome da categoria"
+                        "description": "Categoria já cadastrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"
@@ -1782,7 +1911,10 @@
                             "description": "Categoria atualizada com sucesso"
                         },
                         "400": {
-                            "description": "Requisição inválida. Forneça o nome da categoria"
+                            "description": "Erro nos parâmetros de entrada"
+                        },
+                        "404": {
+                            "description": "Categoria não encontrada"
                         },
                         "500": {
                             "description": "Erro interno do servidor"
@@ -1817,7 +1949,179 @@
                         }
                     },
                     "400": {
-                        "description": "Requisição inválida. Forneça o nome da categoria"
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "404": {
+                        "description": "Categoria não encontrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/fases-granja": {
+            "get" : {
+                "summary": "Rota responsável por obter todas as fases onde as rações podem ser utilizadas",
+                "tags": ["Fases onde as rações podem ser utilizadas"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "ID da categoria para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "nome",
+                        "in": "query",
+                        "description": "Nome da fase para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "id": 1,
+                                        "nome": "Pré-inicial"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "nome": "Inicial"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/fases-granja/create": {
+            "post": {
+                "summary": "Rota responsável por cadastrar uma fase onde as rações podem ser utilizadas",
+                "tags": ["Fases onde as rações podem ser utilizadas"],
+                "requestBody": {
+                    "description": "Dados para cadastrar uma fase",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example": "Pré-inicial"
+                                    }
+                                },
+                                "required": ["nome"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Fase cadastrada com sucesso"
+                    },
+                    "400": {
+                        "description": "Fase já cadastrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/fases-granja/update/{id}": {
+            "patch": {
+                "summary": "Rota responsável por atualizar uma fase onde as rações podem ser utilizadas",
+                "tags": ["Fases onde as rações podem ser utilizadas"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Dados para atualizar uma fase",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "nome": {
+                                        "type": "string",
+                                        "example":"Nome da fase 2"
+                                    }
+                                },
+                                "required": ["nome"]
+                            }
+                        }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Fase atualizada com sucesso"
+                        },
+                        "400": {
+                            "description": "Erro nos parâmetros de entrada"
+                        },
+                        "404": {
+                            "description": "Fase não encontrada"
+                        },
+                        "500": {
+                            "description": "Erro interno do servidor"
+                        }
+                    }
+                }
+            }
+        },
+        "/fases-granja/delete/{id}": {
+            "delete": {
+                "summary": "Rota responsável por deletar uma fase onde as rações podem ser utilizadas",
+                "tags": ["Fases onde as rações podem ser utilizadas"],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "Mensagem": "Fase deletada com sucesso!"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "404": {
+                        "description": "Fase não encontrada"
                     },
                     "500": {
                         "description": "Erro interno do servidor"

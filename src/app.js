@@ -6,6 +6,7 @@ const ingrediente = require('./routes/ingrediente-routes');
 const racao = require('./routes/racao-routes');
 const grupo = require('./routes/grupo-routes');
 const categoria = require('./routes/categoria-routes');
+const fase = require('./routes/fase-granja-routes');
 
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('../swagger.json');
@@ -22,5 +23,6 @@ app.use('/ingredientes', ingrediente);
 app.use('/racoes', racao);
 app.use('/grupos', grupo);
 app.use('/categorias', categoria);
+app.use('/fases-granja', fase);
 
 module.exports = app;
