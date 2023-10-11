@@ -1279,9 +1279,13 @@
                                     "fases_utilizadas": {
                                         "type": "integer",
                                         "example": 2
+                                    },
+                                    "estoque_minimo": {
+                                        "type": "number",
+                                        "example": 1000
                                     }
                                 },
-                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas"]
+                                "required": ["nome", "id_categoria", "tipo_racao", "fases_utilizadas", "estoque_minimo"]
                             }
                         }
                     },
