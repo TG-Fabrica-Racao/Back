@@ -151,30 +151,41 @@
         },        
         "/users/identify": {
             "post": {
-                "summary": "Rota responsável por identificar um usuário através do token de autenticação",
-                "tags": ["Usuários"],
-                "responses": {
-                    "200": {
-                        "description": "Operação bem-sucedida",
-                        "content": {
-                            "application/json": {
-                                "example": {
-                                    "id": 1,
-                                    "nome": "Usuário 1",
-                                    "email": "usuario1@email.com",
-                                    "telefone": "(14) 1234 - 5678",
-                                    "status_usuario": 1,
-                                    "cargo": "Administrador"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Erro interno do servidor"
-                    }
+              "summary": "Rota responsável por identificar um usuário através do token de autenticação",
+              "tags": ["Usuários"],
+              "parameters": [
+                {
+                  "in": "header",
+                  "name": "Authorization",
+                  "description": "Token de autenticação",
+                  "required": true,
+                  "schema": {
+                    "type": "string"
+                  }
                 }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Operação bem-sucedida",
+                  "content": {
+                    "application/json": {
+                      "example": {
+                        "id": 1,
+                        "nome": "Usuário 1",
+                        "email": "usuario1@email.com",
+                        "telefone": "(14) 1234 - 5678",
+                        "status_usuario": 1,
+                        "cargo": "Administrador"
+                      }
+                    }
+                  }
+                },
+                "500": {
+                  "description": "Erro interno do servidor"
+                }
+              }
             }
-        },        
+        },          
         "/users/create": {
             "post": {
                 "summary": "Rota responsável por cadastrar um usuário",
