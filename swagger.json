@@ -1207,6 +1207,10 @@
                                         "type": "integer",
                                         "example": 3
                                     },
+                                    "estoque_minimo": {
+                                        "type": "number",
+                                        "example": 1000
+                                    },
                                     "ingredientes": {
                                         "type": "array",
                                         "items": {
