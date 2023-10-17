@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS racoes (
     fase_utilizada INT NOT NULL,
     batida DECIMAL(10, 2) DEFAULT 0.00,
     estoque_minimo DECIMAL(10, 2) NOT NULL,
-    estoque_atual DECIMAL(10, 2),
+    estoque_atual DECIMAL(10, 2) DEFAULT 0.00,
     PRIMARY KEY (id),
     FOREIGN KEY (id_categoria) REFERENCES categorias (id),
     FOREIGN KEY (fase_utilizada) REFERENCES fases_granja (id)

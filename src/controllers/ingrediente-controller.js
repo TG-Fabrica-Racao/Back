@@ -242,7 +242,6 @@ module.exports = {
             }
     
             const novo_estoque = (parseFloat(ingrediente[0].estoque_atual) + quantidade_liquida).toFixed(2); // Arredonde para 2 casas decimais
-            console.log(novo_estoque);
     
             const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
@@ -253,7 +252,6 @@ module.exports = {
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
     },
-    
     
     acertarEstoque: async (request, response) => {
         try {

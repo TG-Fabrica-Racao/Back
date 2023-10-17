@@ -539,54 +539,55 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-
-            const { id_racao, 
-                    quantidade, 
-                    valor_unitario, 
-                    numero_nota, 
-                    fornecedor } = request.body;
-
+    
+            const {
+                id_racao,
+                quantidade,
+                valor_unitario,
+                numero_nota,
+                fornecedor
+            } = request.body;
+    
             const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
-
+    
             if (!racao) {
                 return response.status(404).json({ message: 'Ração não encontrada' });
             }
-            
+    
             if (racao[0].tipo_racao === 'Produção própria') {
                 return response.status(400).json({ message: 'Essa ração é apenas produzida, portanto não pode ser comprada' });
             }
-
-            const query =
-                `INSERT INTO compras_racao
+    
+            const query = `
+                INSERT INTO compras_racao
                     (data_compra, id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor)
                 VALUES
                     (NOW(), ?, ?, ?, ?, ?, ?)`;
-
-            const valor_total = quantidade * valor_unitario;
-
-            const novo_estoque = racao[0].estoque_atual + quantidade;
-
-            const [result] = await mysql.query(query, [id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor]);
-            await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_racao]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 10, `O usuário ${decodedToken.nome} comprou a ração ${id_racao}`]);         
+    
+            const valor_total = parseFloat(quantidade) * parseFloat(valor_unitario);
+            const novo_estoque = (parseFloat(racao[0].estoque_atual) + parseFloat(quantidade)).toFixed(2);
+    
+            const [result] = await mysql.execute(query, [id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor]);
+            await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [parseFloat(novo_estoque), id_racao]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 10, `O usuário ${decodedToken.nome} comprou a ração ${id_racao}`]);
             return response.status(201).json({ message: 'Compra de ração realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     produzirRacao: async (request, response) => {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-            
+    
             const id_usuario = decodedToken.id;
-            
+    
             const { id_racao, quantidade } = request.body;
     
             const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
-
+    
             if (!racao) {
                 return response.status(404).json({ message: 'Ração não encontrada' });
             }
@@ -594,21 +595,21 @@ module.exports = {
             if (racao[0].tipo_racao === 'Comprada') {
                 return response.status(400).json({ message: 'Essa ração é apenas comprada, portanto não pode ser produzida' });
             }
-
+    
             if (quantidade < racao[0].batida) {
                 return response.status(400).json({ message: 'A quantidade de ração a ser produzida deve ser maior ou igual à batida da ração' });
             }
     
             const query = `
-                INSERT INTO  producao_racao
+                INSERT INTO producao_racao
                     (id_racao, data_producao, id_usuario, quantidade)
                 VALUES
                     (?, NOW(), ?, ?)
             `;
-
-            const novo_estoque = racao[0].estoque_atual + quantidade;
     
-            const [result] = await mysql.query(query, [id_racao, id_usuario, quantidade]);
+            const novo_estoque = parseFloat(racao[0].estoque_atual) + parseFloat(quantidade);
+    
+            const [result] = await mysql.execute(query, [id_racao, id_usuario, quantidade]);
             await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_racao]);
             await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [id_usuario, 11, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);
             return response.status(201).json({ message: 'Produção de ração realizada com sucesso', id: result.insertId });
@@ -616,7 +617,7 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
     
     acertarEstoque: async (request, response) => {
         try {
