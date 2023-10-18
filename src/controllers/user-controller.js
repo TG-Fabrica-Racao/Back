@@ -293,27 +293,37 @@ module.exports = {
 
     updateUser: async (request, response) => {
         try {
-            const { nome, email, telefone, status, cargo } = request.body;
-
-            const [usuario] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
-
+            const token = request.header('Authorization');
+            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+            const { nome, email, telefone, status_usuario, cargo } = request.body;
+    
+            const [usuario] = await mysql.execute('SELECT id FROM usuarios WHERE id = ?', [request.params.id]);
+    
             if (usuario.length === 0) {
                 return response.status(409).json({ message: 'Usuário não encontrado' });
             }
-
+    
+            if (decodedToken.email !== email) {
+                const [user_email] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
+    
+                if (user_email.length > 0) {
+                    return response.status(409).json({ message: 'Este e-mail já está cadastrado' });
+                }
+            }
+    
             const query = 
                 `UPDATE usuarios
                 SET nome = ?, email = ?, telefone = ?, status_usuario = ?, cargo = ?
                 WHERE id = ?`;
-
-            await mysql.execute(query, [nome, email, telefone, status, cargo, request.params.id]);
-
+    
+            await mysql.execute(query, [nome, email, telefone, status_usuario, cargo, request.params.id]);
+    
             return response.status(201).json({ message: 'Usuário atualizado com sucesso' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     disableUser: async (request, response) => {
         try {
