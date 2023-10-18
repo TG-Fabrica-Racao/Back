@@ -295,10 +295,10 @@ module.exports = {
         try {
             const { nome, email, telefone, status, cargo } = request.body;
 
-            const [usuario_existente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
+            const [usuario] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
 
-            if (usuario_existente.length > 0) {
-                return response.status(409).json({ message: 'Este usuário já está cadastrado' });
+            if (usuario.length === 0) {
+                return response.status(409).json({ message: 'Usuário não encontrado' });
             }
 
             const query = 
@@ -306,11 +306,7 @@ module.exports = {
                 SET nome = ?, email = ?, telefone = ?, status_usuario = ?, cargo = ?
                 WHERE id = ?`;
 
-            const [result] = await mysql.execute(query, [nome, email, telefone, status, cargo, request.params.id]);
-
-            if (!result || result.affectedRows === 0) {
-                return response.status(404).json({ message: 'Usuário não encontrado' });
-            }
+            await mysql.execute(query, [nome, email, telefone, status, cargo, request.params.id]);
 
             return response.status(201).json({ message: 'Usuário atualizado com sucesso' });
         } catch (error) {
