@@ -281,12 +281,6 @@ module.exports = {
                 return response.status(401).json({ message: 'A nova senha deve ser diferente da atual' });
             }
     
-            const senhaRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/;
-    
-            if (!senhaRegex.test(senha_nova)) {
-                return response.status(401).json({ message: 'A nova senha deve ter pelo menos 6 caracteres, pelo menos um número e pelo menos um caractere especial' });
-            }
-    
             const senhaHash = await bcrypt.hash(senha_nova, 10);
     
             await mysql.execute('UPDATE usuarios SET senha = ? WHERE email = ?', [senhaHash, email]);
