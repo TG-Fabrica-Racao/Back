@@ -293,8 +293,6 @@ module.exports = {
 
     updateUser: async (request, response) => {
         try {
-            const token = request.header('Authorization');
-            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
             const { nome, email, telefone, status_usuario, cargo } = request.body;
     
             const [usuario] = await mysql.execute('SELECT id FROM usuarios WHERE id = ?', [request.params.id]);
@@ -302,13 +300,11 @@ module.exports = {
             if (usuario.length === 0) {
                 return response.status(409).json({ message: 'Usuário não encontrado' });
             }
-    
-            if (decodedToken.email !== email) {
-                const [user_email] = await mysql.execute('SELECT id FROM usuarios WHERE email = ?', [email]);
-    
-                if (user_email.length > 0) {
-                    return response.status(409).json({ message: 'Este e-mail já está cadastrado' });
-                }
+
+            const [usuario_existente] = await mysql.execute('SELECT id FROM usuarios WHERE email = ? AND id <> ?', [email, request.params.id]);
+
+            if (usuario_existente.length > 0) {
+                return response.status(409).json({ message: 'Este usuário já está cadastrado' });
             }
     
             const query = 
