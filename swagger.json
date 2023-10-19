@@ -99,7 +99,7 @@
                 "tags": ["Usuários"],
                 "parameters": [
                     {
-                        "name": "nome_usuario",
+                        "name": "nome",
                         "in": "query",
                         "description": "Filtrar logs por nome do usuário (opcional)",
                         "schema": {

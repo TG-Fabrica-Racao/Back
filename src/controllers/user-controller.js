@@ -59,7 +59,7 @@ module.exports = {
 
     getLogs: async (request, response) => {
         try {
-            const { nome_usuario, data, data_inicial, data_final } = request.query;
+            const { nome, data, data_inicial, data_final } = request.query;
     
             let query = `
                 SELECT 
@@ -78,9 +78,9 @@ module.exports = {
     
             const params = [];
     
-            if (nome_usuario) {
+            if (nome) {
                 query += ' AND usuarios.nome LIKE ?';
-                params.push(`%${nome_usuario}%`);
+                params.push(`%${nome}%`);
             }
     
             if (data_inicial && data_final) {

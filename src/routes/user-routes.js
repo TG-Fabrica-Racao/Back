@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/logs', login.verifyToken, roles.adminRole, celebrate({
     [Segments.QUERY]: Joi.object().keys({
-        nome_usuario: Joi.string().max(100).allow('').optional(),
+        nome: Joi.string().max(100).allow('').optional(),
         data_inicial: Joi.date().iso().allow('').optional(),
         data_final: Joi.date().iso().allow('').optional(),
     })
