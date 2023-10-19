@@ -178,7 +178,7 @@ module.exports = {
                     (?, ?, ?)`;
     
             const [result] = await mysql.execute(query, [nome, id_grupo, estoque_minimo]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 1, `O usuário ${decodedToken.nome} cadastrou o ingrediente ${nome}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 1, `O ingrediente ${nome} foi cadastrado`]);
             return response.status(201).json({ message: 'Ingrediente cadastrado com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -205,7 +205,7 @@ module.exports = {
                 WHERE id = ?`;
 
             await mysql.execute(query, [nome, id_grupo, estoque_minimo, request.params.id]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 2, `O usuário ${decodedToken.nome} atualizou o ingrediente ${nome}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 2, `O ingrediente ${nome} foi atualizado`]);
             return response.status(200).json({ message: 'Ingrediente atualizado com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -235,7 +235,7 @@ module.exports = {
             const quantidade_liquida = parseFloat(quantidade_bruta) - parseFloat(pre_limpeza);
             const valor_total = parseFloat(quantidade_bruta) * parseFloat(valor_unitario);
     
-            const [ingrediente] = await mysql.execute('SELECT estoque_atual FROM ingredientes WHERE id = ?', [id_ingrediente]);
+            const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [id_ingrediente]);
     
             if (!ingrediente) {
                 return response.status(404).json({ message: 'Ingrediente não encontrado' });
@@ -244,7 +244,7 @@ module.exports = {
             const novo_estoque = (parseFloat(ingrediente[0].estoque_atual) + quantidade_liquida).toFixed(2); // Arredonde para 2 casas decimais
     
             const [result] = await mysql.execute(query, [data_compra, id_ingrediente, quantidade_bruta, pre_limpeza, quantidade_liquida, valor_unitario, valor_total, numero_nota, fornecedor]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `O usuário ${decodedToken.nome} comprou ${quantidade_bruta}kg do ingrediente ${id_ingrediente}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 4, `Compra de ${quantidade_bruta}kg do ingrediente ${ingrediente[0].nome}`]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = ? WHERE id = ?', [parseFloat(novo_estoque), id_ingrediente]); // Converta o novo_estoque para float antes de atualizar no banco de dados
             return response.status(201).json({ message: 'Compra de ingrediente realizada com sucesso!', id: result.insertId });
         } catch (error) {
@@ -281,7 +281,7 @@ module.exports = {
     
             const [result] = await mysql.execute(query, [id_ingrediente, id_usuario, quantidade]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = (estoque_atual - ?) WHERE id = ?', [quantidade, id_ingrediente]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 5, `O usuário ${decodedToken.nome} realizou um acerto de estoque do ingrediente ${id_ingrediente}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 5, `Acerto de estoque de ${quantidade}kg do ingrediente ${ingrediente[0].nome}`]);
             return response.status(201).json({ message: 'Acerto de estoque realizado com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -311,7 +311,7 @@ module.exports = {
             }
 
             await mysql.execute(query, [request.params.id]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 3, `O usuário ${decodedToken.nome} deletou o ingrediente ${request.params.id}`]);        
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 3, `O ingrediente ${ingrediente[0].nome} foi deletado`]);        
             return response.status(200).json({ message: 'Ingrediente deletado com sucesso!' });
         } catch (error) {
             console.error(error);

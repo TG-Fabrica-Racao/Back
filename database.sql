@@ -170,7 +170,6 @@ INSERT INTO acoes (nome) VALUES ('Produzir ração');
 INSERT INTO acoes (nome) VALUES ('Acertar estoque da ração');
 INSERT INTO acoes (nome) VALUES ('Deletar ração');
 
-
 CREATE TABLE IF NOT EXISTS registros (
     id BIGINT AUTO_INCREMENT,
     data_registro DATETIME NOT NULL,

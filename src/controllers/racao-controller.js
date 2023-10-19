@@ -316,7 +316,7 @@ module.exports = {
                 }
             }
     
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `O usuário ${decodedToken.nome} cadastrou a ração ${nome}`]);        
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `A ração ${nome} foi cadastrada`]);        
             return response.status(201).json({ message: 'Ração cadastrada com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -345,7 +345,7 @@ module.exports = {
     
             await mysql.query(query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, request.params.id]);
     
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 7, `O usuário ${decodedToken.nome} atualizaou a ração ${nome}`]);        
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 7, `A ração ${nome} foi atualizada`]);        
             return response.status(200).json({ message: 'Ração atualizada com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -369,7 +369,7 @@ module.exports = {
             const soma_quantidades = ingredientes.reduce((total, ingrediente) => total + ingrediente.quantidade, 0);
     
             // Obtém a batida atual da ração no banco de dados
-            const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
+            const [batida_racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
     
             if (!batida_racao || !batida_racao[0]) {
                 return response.status(400).json({ message: 'Ração não encontrada' });
@@ -410,7 +410,7 @@ module.exports = {
             // Atualiza a batida da ração no banco de dados com a nova batida calculada
             await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
     
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 8, `O usuário ${decodedToken.nome} adicionou ingrediente(s) na fórmula da ração ${id_racao}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 8, `Ingrediente(s) adicionados na fórmula da ração ${batida_racao[0].nome}`]);
             return response.status(201).json({ message: 'Ingredientes inseridos na ração com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -439,7 +439,7 @@ module.exports = {
             }, 0);
     
             // Verificar se a ração existe
-            const [raoExists] = await mysql.execute('SELECT id FROM racoes WHERE id = ?', [id_racao]);
+            const [raoExists] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
             if (!raoExists || raoExists.length === 0) {
                 return response.status(400).json({ message: 'Ração não encontrada.' });
             }
@@ -473,7 +473,7 @@ module.exports = {
     
             await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida[0].batida, id_racao]);
     
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 9, `O usuário ${decodedToken.nome} alterou a fórmula da ração ${id_racao}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 9, `Fórmula da ração ${raoExists[0].nome} atualizada`]);
             return response.status(200).json({ message: 'Ingredientes atualizados na ração com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -499,7 +499,7 @@ module.exports = {
             }
     
             // Verificar se o ingrediente existe
-            const [ingredientExists] = await mysql.execute('SELECT id FROM ingredientes WHERE id = ?', [id_ingrediente]);
+            const [ingredientExists] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [id_ingrediente]);
             if (!ingredientExists || ingredientExists.length === 0) {
                 return response.status(400).json({ message: `Ingrediente com ID ${id_ingrediente} não encontrado.` });
             }
@@ -519,7 +519,7 @@ module.exports = {
             await mysql.query(query, [id_racao, id_ingrediente]);
     
             // Consultar a batida atual da ração
-            const [batida_racao] = await mysql.execute('SELECT batida FROM racoes WHERE id = ?', [id_racao]);
+            const [batida_racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [id_racao]);
     
             // Calcular a nova batida da ração com base na remoção do ingrediente
             const nova_batida = parseFloat((batida_racao[0].batida - quantidadeRemovida).toFixed(2));
@@ -527,7 +527,7 @@ module.exports = {
             // Atualizar a batida da ração no banco de dados com a nova batida calculada
             await mysql.execute('UPDATE racoes SET batida = ? WHERE id = ?', [nova_batida, id_racao]);
     
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 10, `O usuário ${decodedToken.nome} deletou o ingrediente ${id_ingrediente} da fórmula da ração ${id_racao}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 10, `Ingrediente ${ingredientExists[0].nome} deletado da fórmula da ração ${batida_racao[0].nome}`]);
             return response.status(200).json({ message: 'Ingrediente removido da ração com sucesso!' });
         } catch (error) {
             console.error(error);
@@ -569,7 +569,7 @@ module.exports = {
     
             const [result] = await mysql.execute(query, [id_racao, quantidade, valor_unitario, valor_total, numero_nota, fornecedor]);
             await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [parseFloat(novo_estoque), id_racao]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 11, `O usuário ${decodedToken.nome} comprou a ração ${id_racao}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 11, `Compra de ${quantidade}kg  da ração ${racao[0].nome}`]);
             return response.status(201).json({ message: 'Compra de ração realizada com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -611,7 +611,7 @@ module.exports = {
     
             const [result] = await mysql.execute(query, [id_racao, id_usuario, quantidade]);
             await mysql.execute('UPDATE racoes SET estoque_atual = ? WHERE id = ?', [novo_estoque, id_racao]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [id_usuario, 12, `O usuário ${decodedToken.nome} produziu ${quantidade}kg da ração ${id_racao}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [id_usuario, 12, `Produção de ${quantidade}kg da ração ${racao[0].nome}`]);
             return response.status(201).json({ message: 'Produção de ração realizada com sucesso', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -647,7 +647,7 @@ module.exports = {
 
             const [result] = await mysql.execute(query, [id_racao, id_usuario, quantidade]);
             await mysql.execute('UPDATE racoes SET estoque_atual = (estoque_atual - ?) WHERE id = ?', [quantidade, id_racao]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 13, `O usuário ${decodedToken.nome} realizou um acerto de estoque da ração ${id_racao}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 13, `Acerto de estoque de ${quantidade}kg da ração ${racao[0].nome}`]);
             return response.status(201).json({ message: 'Acerto de estoque realizado com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
@@ -660,17 +660,19 @@ module.exports = {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
 
+            const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [request.params.id]);
+
+            if (!racao || racao.length === 0) {
+                return response.status(404).json({ message: 'Ração não encontrada' });
+            }
+
             const query = 
                 `DELETE FROM racoes
                 WHERE id = ?`;
 
             const [result] = await mysql.execute(query, [request.params.id]);
 
-            if (!result || result.length === 0) {
-                return response.status(404).json({ message: 'Ração não encontrada' });
-            }
-
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 14, `O usuário ${decodedToken.nome} deletou a ração ${request.params.id}`]);        
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 14, `A ração ${racao[0].nome} foi deletada`]);        
             return response.status(200).json({ message: 'Ingrediente deletado com sucesso!' });
         } catch (error) {
             console.error(error);
