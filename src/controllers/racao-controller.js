@@ -176,6 +176,7 @@ module.exports = {
     
             let query = `
                 SELECT
+                    producao_racao.id,
                     racoes.nome AS racao,
                     CONVERT_TZ(producao_racao.data_producao, 'UTC', 'America/Sao_Paulo') AS data,
                     usuarios.nome AS usuario,
