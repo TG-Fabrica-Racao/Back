@@ -1116,6 +1116,61 @@
                 }
             }
         },
+        "/racoes/historico-producao": {
+            "get": {
+                "summary": "Rota responsável por retornar o histórico de produção",
+                "tags": ["Rações"],
+                "parameters": [
+                    {
+                        "name": "nome_racao",
+                        "in": "query",
+                        "description": "Nome da ração para filtrar (opcional)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "data_inicial",
+                        "in": "query",
+                        "description": "Filtrar histórico de produção em um determinado período, começando pela data_inicial",
+                        "schema": {
+                            "type": "date"
+                        }
+                    },
+                    {
+                        "name": "data_final",
+                        "in": "query",
+                        "description": "e terminando na data_final. É possível utilizar cada filtro individualmente.",
+                        "schema": {
+                            "type": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "racao": "Ração 2",
+                                        "data": "2023-10-17T12:03:39.000Z",
+                                        "usuario": "Felipe",
+                                        "quantidade": "3000.00"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erro nos parâmetros de entrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
         "/racoes/acertos-estoque": {
             "get": {
                 "summary": "Rota responsável por retornar todos os acertos de estoque das rações",
