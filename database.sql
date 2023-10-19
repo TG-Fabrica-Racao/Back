@@ -152,13 +152,14 @@ CREATE TABLE IF NOT EXISTS acoes (
     PRIMARY KEY (id)
 );
 
-/* Todas as ações possíveis - Ingredientes */
+-- Todas as ações possíveis - Ingredientes 
 INSERT INTO acoes (nome) VALUES ('Cadastrar ingrediente');
 INSERT INTO acoes (nome) VALUES ('Atualizar ingrediente');
 INSERT INTO acoes (nome) VALUES ('Deletar ingrediente');
 INSERT INTO acoes (nome) VALUES ('Comprar ingrediente');
+INSERT INTO acoes (nome) VALUES ('Acertar estoque do ingrediente');
 
-/* Todas as ações possíveis - Rações */
+-- Todas as ações possíveis - Rações 
 INSERT INTO acoes (nome) VALUES ('Cadastrar ração');
 INSERT INTO acoes (nome) VALUES ('Atualizar ração');
 INSERT INTO acoes (nome) VALUES ('Adicionar ingredientes na fórmula da ração');
@@ -168,6 +169,7 @@ INSERT INTO acoes (nome) VALUES ('Comprar ração');
 INSERT INTO acoes (nome) VALUES ('Produzir ração');
 INSERT INTO acoes (nome) VALUES ('Acertar estoque da ração');
 INSERT INTO acoes (nome) VALUES ('Deletar ração');
+
 
 CREATE TABLE IF NOT EXISTS registros (
     id BIGINT AUTO_INCREMENT,

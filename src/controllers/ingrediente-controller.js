@@ -281,7 +281,7 @@ module.exports = {
     
             const [result] = await mysql.execute(query, [id_ingrediente, id_usuario, quantidade]);
             await mysql.execute('UPDATE ingredientes SET estoque_atual = (estoque_atual - ?) WHERE id = ?', [quantidade, id_ingrediente]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 12, `O usuário ${decodedToken.nome} realizou um acerto de estoque da ração ${id_ingrediente}`]);
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 5, `O usuário ${decodedToken.nome} realizou um acerto de estoque do ingrediente ${id_ingrediente}`]);
             return response.status(201).json({ message: 'Acerto de estoque realizado com sucesso!', id: result.insertId });
         } catch (error) {
             console.error(error);
