@@ -128,7 +128,7 @@ module.exports = {
             let query = `
                 SELECT
                     compras_racao.id,
-                    compras_racao.data_compra
+                    compras_racao.data_compra,
                     racoes.nome AS racao,
                     compras_racao.quantidade,
                     compras_racao.valor_unitario,
