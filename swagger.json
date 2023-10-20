@@ -1153,6 +1153,7 @@
                             "application/json": {
                                 "example": [
                                     {
+                                        "id": 1,
                                         "racao": "Ração 2",
                                         "data": "2023-10-17T12:03:39.000Z",
                                         "usuario": "Felipe",
@@ -1209,17 +1210,10 @@
                                 "example": [
                                     {
                                         "id": 1,
-                                        "ração": "Ração 12",
-                                        "data_acerto": "2023-08-09",
-                                        "usuario": "Cleber",
-                                        "quantidade": 3000.00
-                                    },
-                                    {
-                                        "id": 2,
-                                        "ração": "Ração 21",
-                                        "data_acerto": "2023-10-10",
+                                        "racao": "Ração 1",
+                                        "data_acerto": "2023-10-17T12:04:37.000Z",
                                         "usuario": "Felipe",
-                                        "quantidade": 2000.00
+                                        "quantidade": "1000.00"
                                     }
                                 ]
                             }

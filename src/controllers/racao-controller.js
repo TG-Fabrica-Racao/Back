@@ -222,9 +222,10 @@ module.exports = {
             const { data_inicial, data_final, nome_racao } = request.query;
     
             let query = `
-                SELECT 
+                SELECT
+                    acerto_estoque.id,
                     racoes.nome AS racao,
-                    CONVERT_TZ(acerto_estoque.data_acerto, 'UTC', 'America/Sao_Paulo') AS data_acerto_brasilia,
+                    CONVERT_TZ(acerto_estoque.data_acerto, 'UTC', 'America/Sao_Paulo') AS data_acerto,
                     usuarios.nome AS usuario,
                     acerto_estoque.quantidade
                 FROM acerto_estoque
