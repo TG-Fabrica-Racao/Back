@@ -55,13 +55,13 @@ router.post('/create', login.verifyToken, celebrate({
         nome: Joi.string().min(3).max(100).required(),
         id_categoria: Joi.number().integer().min(1).required(),
         tipo_racao: Joi.string().valid('Produção própria', 'Comprada', 'Ambos').required(),
-        fase_utilizada: Joi.number().integer().min(1).required(),
         estoque_minimo: Joi.number().integer().min(1).required(),
         ingredientes: Joi.array().items(Joi.object({
             id_ingrediente: Joi.number().integer().min(1).required(),
             quantidade: Joi.number().integer().min(1).required(),
         })),
-    })
+        fases_utilizadas: Joi.array().items(Joi.number().integer().min(1).required()), // Lista de IDs de fases
+    }),
 }), racaoController.createRacao);
 
 router.post('/insert-ingredientes/:id_racao', login.verifyToken, celebrate({

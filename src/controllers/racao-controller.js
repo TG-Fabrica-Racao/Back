@@ -6,10 +6,9 @@ module.exports = {
 
     getAllRacoes: async (request, response) => {
         try {
-            const { id, nome, categoria, fase_utilizada, tipo_racao } = request.query;
-            
+            const { id, nome, categoria, tipo_racao } = request.query;
+    
             const params = [];
-
             let where = "WHERE 1=1";
     
             if (id) {
@@ -27,44 +26,62 @@ module.exports = {
                 params.push(`%${categoria}%`);
             }
     
-            if (fase_utilizada) {
-                where += " AND fases_granja.nome LIKE ?";
-                params.push(`%${fase_utilizada}%`);
-            }
-    
             if (tipo_racao) {
                 where += " AND racoes.tipo_racao LIKE ?";
                 params.push(`%${tipo_racao}%`);
             }
     
             const query = `
-                    SELECT
-                        racoes.id,
-                        racoes.nome,
-                        categorias.id AS id_categoria,
-                        categorias.nome AS categoria,
-                        racoes.tipo_racao,
-                        fases_granja.nome AS fase_utilizada,
-                        racoes.batida,
-                        racoes.estoque_minimo,
-                        racoes.estoque_atual,
-                        JSON_ARRAYAGG(JSON_OBJECT('id', i.id, 'nome', i.nome, 'quantidade', ir.quantidade)) AS ingredientes
+                SELECT
+                    racoes.id,
+                    racoes.nome,
+                    categorias.id AS id_categoria,
+                    categorias.nome AS categoria,
+                    racoes.tipo_racao,
+                    GROUP_CONCAT(DISTINCT fases_granja.nome ORDER BY fases_granja.nome SEPARATOR ', ') AS fases_utilizadas,
+                    racoes.batida,
+                    racoes.estoque_minimo,
+                    racoes.estoque_atual,
+                    JSON_ARRAYAGG(JSON_OBJECT('id', i.id, 'nome', i.nome, 'quantidade', ir.quantidade)) AS ingredientes
                 FROM racoes
                 INNER JOIN categorias ON racoes.id_categoria = categorias.id
-                INNER JOIN fases_granja ON racoes.fase_utilizada = fases_granja.id
+                LEFT JOIN racao_fase ON racoes.id = racao_fase.id_racao
+                LEFT JOIN fases_granja ON racao_fase.id_fase = fases_granja.id
                 LEFT JOIN ingrediente_racao ir ON racoes.id = ir.id_racao
                 LEFT JOIN ingredientes i ON ir.id_ingrediente = i.id
-                ${where}
-                GROUP BY racoes.id, racoes.nome, categorias.id, categorias.nome, racoes.tipo_racao, fases_granja.nome, racoes.batida, racoes.estoque_minimo, racoes.estoque_atual;
-                `;
+                GROUP BY racoes.id, racoes.nome, categorias.id, categorias.nome, racoes.tipo_racao, racoes.batida, racoes.estoque_minimo, racoes.estoque_atual;
+            `;
     
             const [result] = await mysql.execute(query, params);
+    
+            if (result && Array.isArray(result)) {
+                result.forEach((row) => {
+                    if (row && Array.isArray(row.ingredientes)) {
+                        const uniqueIngredients = new Map();
+                        row.ingredientes = row.ingredientes.filter((ingrediente) => {
+                            if (!uniqueIngredients.has(ingrediente.id)) {
+                                uniqueIngredients.set(ingrediente.id, true);
+                                return true;
+                            }
+                            return false;
+                        });
+                    }
+                });
+    
+                result.forEach((row) => {
+                    if (row && Array.isArray(row.ingredientes)) {
+                        row.ingredientes.sort((a, b) => a.id - b.id);
+                    }
+                });
+            }
+    
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },   
+    },
+    
     
     getRacoesCompradas: async (request, response) => {
         try {
@@ -268,15 +285,15 @@ module.exports = {
         try {
             const token = request.header('Authorization');
             const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
-            
-            const { nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo, ingredientes } = request.body;
+    
+            const { nome, id_categoria, tipo_racao, estoque_minimo, ingredientes, fases_utilizadas } = request.body;
     
             const [racao] = await mysql.execute('SELECT * FROM racoes WHERE nome = ?', [nome]);
-
+    
             if (racao.length > 0) {
                 return response.status(400).json({ message: 'Ração já cadastrada' });
             }
-
+    
             let batida = 0; // Inicializa a batida como zero
     
             if (Array.isArray(ingredientes) && ingredientes.length > 0) {
@@ -286,45 +303,34 @@ module.exports = {
                 }
             }
     
-            if (tipo_racao === "Comprada") {
-                const racao_query =
-                    `INSERT INTO racoes
-                        (nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo)
-                    VALUES
-                        (?, ?, ?, ?, ?)`;
-        
-                await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, estoque_minimo]);
-            } else {
-                const racao_query =
-                    `INSERT INTO racoes
-                        (nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo)
-                    VALUES
-                        (?, ?, ?, ?, ?, ?)`;
-        
-                const [result] = await mysql.query(racao_query, [nome, id_categoria, tipo_racao, fase_utilizada, batida, estoque_minimo]);
-                const racao_id = result.insertId;
-        
-                if (Array.isArray(ingredientes) && ingredientes.length > 0) {
-                    const insert_ingrediente =
-                        `INSERT INTO ingrediente_racao
-                            (id_racao, id_ingrediente, quantidade)
-                        VALUES
-                            (?, ?, ?)`;
-        
-                    for (const ingrediente of ingredientes) {
-                        const { id_ingrediente, quantidade } = ingrediente;
-                        await mysql.query(insert_ingrediente, [racao_id, id_ingrediente, quantidade]);
-                    }
+            const racaoQuery = `INSERT INTO racoes (nome, id_categoria, tipo_racao, estoque_minimo, batida) VALUES (?, ?, ?, ?, ?)`;
+            const [result] = await mysql.query(racaoQuery, [nome, id_categoria, tipo_racao, estoque_minimo, batida]);
+            const racao_id = result.insertId;
+    
+            // Inserir as fases utilizadas
+            if (Array.isArray(fases_utilizadas) && fases_utilizadas.length > 0) {
+                const insertFaseQuery = `INSERT INTO racao_fase (id_racao, id_fase) VALUES (?, ?)`;
+                for (const id_fase of fases_utilizadas) {
+                    await mysql.query(insertFaseQuery, [racao_id, id_fase]);
                 }
             }
     
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `A ração ${nome} foi cadastrada`]);        
+            // Inserir os ingredientes
+            if (Array.isArray(ingredientes) && ingredientes.length > 0) {
+                const insertIngredienteQuery = `INSERT INTO ingrediente_racao (id_racao, id_ingrediente, quantidade) VALUES (?, ?, ?)`;
+                for (const ingrediente of ingredientes) {
+                    const { id_ingrediente, quantidade } = ingrediente;
+                    await mysql.query(insertIngredienteQuery, [racao_id, id_ingrediente, quantidade]);
+                }
+            }
+    
+            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 6, `A ração ${nome} foi cadastrada`]);
             return response.status(201).json({ message: 'Ração cadastrada com sucesso!' });
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },    
+    },
     
     updateRacao: async (request, response) => {
         try {

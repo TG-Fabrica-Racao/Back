@@ -77,13 +77,20 @@ CREATE TABLE IF NOT EXISTS racoes (
     nome VARCHAR(50) NOT NULL,
     id_categoria INT NOT NULL,
     tipo_racao ENUM ('Produção própria', 'Comprada', 'Ambos') NOT NULL, 
-    fase_utilizada INT NOT NULL,
     batida DECIMAL(10, 2) DEFAULT 0.00,
     estoque_minimo DECIMAL(10, 2) NOT NULL,
     estoque_atual DECIMAL(10, 2) DEFAULT 0.00,
     PRIMARY KEY (id),
-    FOREIGN KEY (id_categoria) REFERENCES categorias (id),
-    FOREIGN KEY (fase_utilizada) REFERENCES fases_granja (id)
+    FOREIGN KEY (id_categoria) REFERENCES categorias (id)
+);
+
+CREATE TABLE IF NOT EXISTS racao_fase (
+    id INT AUTO_INCREMENT,
+    id_racao INT NOT NULL,
+    id_fase INT NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (id_racao) REFERENCES racoes (id),
+    FOREIGN KEY (id_fase) REFERENCES fases_granja (id)
 );
 
 CREATE TABLE IF NOT EXISTS ingrediente_racao (
