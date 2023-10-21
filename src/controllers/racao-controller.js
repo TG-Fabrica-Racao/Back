@@ -680,6 +680,30 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
+    },
+
+    // Métodos utilizados nos gráficos
+
+    // Obter as rações mais compradas
+
+    getRacoesMaisCompradas: async (request, response) => {
+        try {
+            const query = 
+            `
+            SELECT racoes.nome AS Ração, SUM(compras_racao.quantidade) AS Quantidade_Comprada
+            FROM racoes
+            JOIN compras_racao ON racoes.id = compras_racao.id_racao
+            WHERE racoes.tipo_racao = 'Comprada'
+            GROUP BY racoes.id
+            ORDER BY Quantidade_Comprada DESC;
+            `;
+
+            const [result] = await mysql.execute(query);
+            return response.status(200).json(result);
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
     }
     
 };
