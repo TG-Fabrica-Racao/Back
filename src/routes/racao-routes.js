@@ -140,6 +140,8 @@ router.delete('/delete/:id', login.verifyToken, celebrate({
 // Rotas utilizadas nos gráficos
 router.get('/mais-compradas', racaoController.getRacoesMaisCompradas);
 
+router.get('/mais-produzidas', racaoController.getRacoesMaisProduzidas);
+
 router.use(errors());
 
 module.exports = router;

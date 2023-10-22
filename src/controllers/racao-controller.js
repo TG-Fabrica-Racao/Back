@@ -704,6 +704,28 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    }
+    },
+
+    // Obter as rações mais produzidas
+    getRacoesMaisProduzidas: async (request, response) => {
+        try {
+            const query = 
+            `
+            SELECT racoes.nome AS racao, SUM(producao_racao.quantidade) AS quantidade
+            FROM racoes
+            JOIN producao_racao ON racoes.id = producao_racao.id_racao
+            WHERE racoes.tipo_racao = 'Produção própria'
+            AND producao_racao.data_producao >= DATE_SUB(NOW(), INTERVAL 1 YEAR)
+            GROUP BY racoes.id
+            ORDER BY quantidade DESC;
+            `;
+
+            const [result] = await mysql.execute(query);
+            return response.status(200).json(result);
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }        
+    },
     
 };
