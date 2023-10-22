@@ -685,17 +685,17 @@ module.exports = {
     // Métodos utilizados nos gráficos
 
     // Obter as rações mais compradas
-
     getRacoesMaisCompradas: async (request, response) => {
         try {
             const query = 
             `
-            SELECT racoes.nome AS Ração, SUM(compras_racao.quantidade) AS Quantidade_Comprada
+            SELECT racoes.nome AS racao, SUM(compras_racao.quantidade) AS quantidade
             FROM racoes
             JOIN compras_racao ON racoes.id = compras_racao.id_racao
             WHERE racoes.tipo_racao = 'Comprada'
+            AND compras_racao.data_compra >= DATE_SUB(NOW(), INTERVAL 1 YEAR)
             GROUP BY racoes.id
-            ORDER BY Quantidade_Comprada DESC;
+            ORDER BY quantidade DESC;
             `;
 
             const [result] = await mysql.execute(query);

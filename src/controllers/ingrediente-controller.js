@@ -317,6 +317,31 @@ module.exports = {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    }
+    },
+
+    // Métodos utilizados nos gráficos
+
+    // Obter os ingredientes mais comprados
+    getIngredientesMaisComprados: async (request, response) => {
+        try {
+            const query = 
+            `
+            SELECT
+                ingredientes.nome AS ingrediente,
+                SUM(compras_ingrediente.quantidade_liquida) AS quantidade
+            FROM compras_ingrediente
+            JOIN ingredientes ON compras_ingrediente.id_ingrediente = ingredientes.id
+            WHERE compras_ingrediente.data_compra >= DATE_SUB(NOW(), INTERVAL 1 YEAR)
+            GROUP BY ingredientes.id
+            ORDER BY quantidade DESC;
+            `;
+            
+            const [result] = await mysql.execute(query);
+            return response.status(200).json(result);
+        } catch (error) {
+            console.error(error);
+            return response.status(500).json({ message: 'Erro interno do servidor' });
+        }
+    },
 
 };

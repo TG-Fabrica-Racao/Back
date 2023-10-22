@@ -74,6 +74,9 @@ router.delete('/delete/:id', login.verifyToken, celebrate({
     })
 }), ingredienteController.deleteIngrediente);
 
+// Rotas utilizadas nos gráficos
+router.get('/mais-comprados', ingredienteController.getIngredientesMaisComprados);
+
 router.use(errors());
 
 module.exports = router;
