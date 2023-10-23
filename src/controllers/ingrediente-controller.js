@@ -300,10 +300,16 @@ module.exports = {
 
             const [ingrediente_racao] = await mysql.execute('SELECT * FROM ingrediente_racao WHERE id_ingrediente = ?', [request.params.id]);
 
+            const [ingrediente_compra] = await mysql.execute('SELECT * FROM compras_ingrediente WHERE id = ?', [request.params.id]);
+
             const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [request.params.id]);
 
             if (ingrediente_racao.length > 0) {
                 return response.status(400).json({ message: 'Não é possível deletar um ingrediente que está relacionado a uma ração' });
+            }
+
+            if (ingrediente_compra.length > 0) {
+                return response.status(400).json({ message: 'Não é possível excluir um ingrediente que está relacionado a uma compra' })
             }
 
             if (!ingrediente) {
