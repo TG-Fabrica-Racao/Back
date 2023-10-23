@@ -664,8 +664,14 @@ module.exports = {
 
             const [racao] = await mysql.execute('SELECT * FROM racoes WHERE id = ?', [request.params.id]);
 
+            const [racao_compra] = await mysql.execute('SELECT * FROM compras_racao WHERE id_racao = ?', [request.params.id]);
+
             if (!racao || racao.length === 0) {
                 return response.status(404).json({ message: 'Ração não encontrada' });
+            }
+
+            if (racao_compra && racao_compra.length > 0) {
+                return response.status(400).json({ message: 'Não é possível excluir uma ração que está relacionada a uma compra' });
             }
 
             const query = 
