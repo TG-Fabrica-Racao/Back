@@ -300,7 +300,7 @@ module.exports = {
 
             const [ingrediente_racao] = await mysql.execute('SELECT * FROM ingrediente_racao WHERE id_ingrediente = ?', [request.params.id]);
 
-            const [ingrediente_compra] = await mysql.execute('SELECT * FROM compras_ingrediente WHERE id = ?', [request.params.id]);
+            const [ingrediente_compra] = await mysql.execute('SELECT * FROM compras_ingrediente WHERE id_ingrediente = ?', [request.params.id]);
 
             const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [request.params.id]);
 
