@@ -951,6 +951,34 @@
                 }
             }
         },
+        "/ingredientes/mais-comprados": {
+            "get": {
+                "summary": "Rota responsável por retornar os ingredientes mais comprados",
+                "tags": ["Ingredientes"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                            "application/json": {
+                              "example": [
+                                {
+                                  "nome": "Milho",
+                                  "quantidade": 100000
+                                },
+                                {
+                                  "nome": "Farinha",
+                                  "quantidade": 50000
+                                }
+                              ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
         "/racoes": {
             "get": {
                 "summary": "Rota responsável por retornar todas as rações",
@@ -1683,6 +1711,62 @@
                     },
                     "404": {
                         "description": "Ração não encontrada"
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racoes/mais-compradas": {
+            "get": {
+                "summary": "Rota responsável por retornar as rações mais compradas",
+                "tags": ["Rações"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                          "application/json": {
+                            "example": [
+                              {
+                                "nome": "Ração 1",
+                                "quantidade": 100000
+                              },
+                              {
+                                "nome": "Ração 2",
+                                "quantidade": 50000
+                              }
+                            ]
+                          }
+                        }
+                    },
+                    "500": {
+                        "description": "Erro interno do servidor"
+                    }
+                }
+            }
+        },
+        "/racoes/mais-produzidas": {
+            "get": {
+                "summary": "Rota responsável por retornar as rações mais produzidas",
+                "tags": ["Rações"],
+                "responses": {
+                    "200": {
+                        "description": "Operação bem-sucedida",
+                        "content": {
+                          "application/json": {
+                            "example": [
+                              {
+                                "nome": "Ração 1",
+                                "quantidade": 100000
+                              },
+                              {
+                                "nome": "Ração 2",
+                                "quantidade": 50000
+                              }
+                            ]
+                          }
+                        }
                     },
                     "500": {
                         "description": "Erro interno do servidor"
