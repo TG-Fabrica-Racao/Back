@@ -17,10 +17,10 @@ INSERT INTO grupos (nome) VALUES ('Lácteo');
 INSERT INTO grupos (nome) VALUES ('Macro minerais');
 INSERT INTO grupos (nome) VALUES ('Micro nutrientes');
 INSERT INTO grupos (nome) VALUES ('Milho/sorgo');
-INSERT INTO grupos (nome) VALUES ('Outros');
 INSERT INTO grupos (nome) VALUES ('Palatabilizantes');
 INSERT INTO grupos (nome) VALUES ('Promotor e medicamento');
 INSERT INTO grupos (nome) VALUES ('Protéicos');
+INSERT INTO grupos (nome) VALUES ('Outros');
 
 CREATE TABLE IF NOT EXISTS categorias (
 	id INT AUTO_INCREMENT,

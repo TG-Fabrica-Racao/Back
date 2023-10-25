@@ -59,7 +59,7 @@ CREATE TABLE `acoes` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nome` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -68,7 +68,7 @@ CREATE TABLE `acoes` (
 
 LOCK TABLES `acoes` WRITE;
 /*!40000 ALTER TABLE `acoes` DISABLE KEYS */;
-INSERT INTO `acoes` VALUES (1,'Cadastrar ingrediente'),(2,'Atualizar ingrediente'),(3,'Deletar ingrediente'),(4,'Comprar ingrediente'),(5,'Cadastrar ração'),(6,'Atualizar ração'),(7,'Adicionar ingredientes na fórmula da ração'),(8,'Atualizar ingredientes na fórmula da ração'),(9,'Deletar ingrediente da fórmula da ração'),(10,'Comprar ração'),(11,'Produzir ração'),(12,'Acertar estoque da ração'),(13,'Deletar ração');
+INSERT INTO `acoes` VALUES (1,'Cadastrar ingrediente'),(2,'Atualizar ingrediente'),(3,'Deletar ingrediente'),(4,'Comprar ingrediente'),(5,'Acertar estoque do ingrediente'),(6,'Cadastrar ração'),(7,'Atualizar ração'),(8,'Adicionar ingredientes na fórmula da ração'),(9,'Atualizar ingredientes na fórmula da ração'),(10,'Deletar ingrediente da fórmula da ração'),(11,'Comprar ração'),(12,'Produzir ração'),(13,'Acertar estoque da ração'),(14,'Deletar ração');
 /*!40000 ALTER TABLE `acoes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -105,7 +105,7 @@ DROP TABLE IF EXISTS `compras_ingrediente`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `compras_ingrediente` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `data_compra` datetime NOT NULL,
+  `data_compra` date NOT NULL,
   `id_ingrediente` int NOT NULL,
   `quantidade_bruta` decimal(10,2) NOT NULL,
   `pre_limpeza` decimal(10,2) NOT NULL,
@@ -117,7 +117,7 @@ CREATE TABLE `compras_ingrediente` (
   PRIMARY KEY (`id`),
   KEY `id_ingrediente` (`id_ingrediente`),
   CONSTRAINT `compras_ingrediente_ibfk_1` FOREIGN KEY (`id_ingrediente`) REFERENCES `ingredientes` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -126,7 +126,6 @@ CREATE TABLE `compras_ingrediente` (
 
 LOCK TABLES `compras_ingrediente` WRITE;
 /*!40000 ALTER TABLE `compras_ingrediente` DISABLE KEYS */;
-INSERT INTO `compras_ingrediente` VALUES (1,'2023-10-03 16:06:52',1,100000.00,0.00,100000.00,4.90,490000.00,'123456789','Arlindo');
 /*!40000 ALTER TABLE `compras_ingrediente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -139,7 +138,7 @@ DROP TABLE IF EXISTS `compras_racao`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `compras_racao` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `data_compra` datetime NOT NULL,
+  `data_compra` date NOT NULL,
   `id_racao` int NOT NULL,
   `quantidade` decimal(10,2) DEFAULT NULL,
   `valor_unitario` decimal(10,2) NOT NULL,
@@ -172,7 +171,7 @@ CREATE TABLE `fases_granja` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nome` varchar(30) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -181,7 +180,7 @@ CREATE TABLE `fases_granja` (
 
 LOCK TABLES `fases_granja` WRITE;
 /*!40000 ALTER TABLE `fases_granja` DISABLE KEYS */;
-INSERT INTO `fases_granja` VALUES (1,'Reprodução'),(2,'Maternidade'),(3,'Creche'),(4,'Terminação'),(5,'Reprodução'),(6,'Maternidade'),(7,'Creche'),(8,'Terminação');
+INSERT INTO `fases_granja` VALUES (1,'Reprodução'),(2,'Maternidade'),(3,'Creche'),(4,'Terminação');
 /*!40000 ALTER TABLE `fases_granja` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -205,7 +204,7 @@ CREATE TABLE `grupos` (
 
 LOCK TABLES `grupos` WRITE;
 /*!40000 ALTER TABLE `grupos` DISABLE KEYS */;
-INSERT INTO `grupos` VALUES (1,'Aditivo'),(2,'Aminoácidos'),(3,'Energético'),(4,'Fibrosos'),(5,'Lácteo'),(6,'Macro minerais'),(7,'Micro nutrientes'),(8,'Milho/sorgo'),(9,'Outros'),(10,'Palatabilizantes'),(11,'Promotor e medicamento'),(12,'Protéicos');
+INSERT INTO `grupos` VALUES (1,'Aditivo'),(2,'Aminoácidos'),(3,'Energético'),(4,'Fibrosos'),(5,'Lácteo'),(6,'Macro minerais'),(7,'Micro nutrientes'),(8,'Milho/sorgo'),(9,'Palatabilizantes'),(10,'Promotor e medicamento'),(11,'Protéicos'),(12,'Outros');
 /*!40000 ALTER TABLE `grupos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -219,7 +218,7 @@ DROP TABLE IF EXISTS `ingrediente_racao`;
 CREATE TABLE `ingrediente_racao` (
   `id_ingrediente` int NOT NULL,
   `id_racao` int NOT NULL,
-  `quantidade` decimal(10,2) NOT NULL,
+  `quantidade` float NOT NULL,
   KEY `id_ingrediente` (`id_ingrediente`),
   KEY `id_racao` (`id_racao`),
   CONSTRAINT `ingrediente_racao_ibfk_1` FOREIGN KEY (`id_ingrediente`) REFERENCES `ingredientes` (`id`),
@@ -233,7 +232,6 @@ CREATE TABLE `ingrediente_racao` (
 
 LOCK TABLES `ingrediente_racao` WRITE;
 /*!40000 ALTER TABLE `ingrediente_racao` DISABLE KEYS */;
-INSERT INTO `ingrediente_racao` VALUES (1,1,500.00),(3,1,500.00);
 /*!40000 ALTER TABLE `ingrediente_racao` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -249,11 +247,11 @@ CREATE TABLE `ingredientes` (
   `nome` varchar(50) NOT NULL,
   `id_grupo` int NOT NULL,
   `estoque_minimo` decimal(10,2) NOT NULL,
-  `estoque_atual` decimal(10,2) DEFAULT NULL,
+  `estoque_atual` decimal(10,2) DEFAULT '0.00',
   PRIMARY KEY (`id`),
   KEY `id_grupo` (`id_grupo`),
   CONSTRAINT `ingredientes_ibfk_1` FOREIGN KEY (`id_grupo`) REFERENCES `grupos` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -262,7 +260,6 @@ CREATE TABLE `ingredientes` (
 
 LOCK TABLES `ingredientes` WRITE;
 /*!40000 ALTER TABLE `ingredientes` DISABLE KEYS */;
-INSERT INTO `ingredientes` VALUES (1,'Sim',5,1000.00,100000.00),(3,'Sim',3,1000.00,NULL);
 /*!40000 ALTER TABLE `ingredientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -295,6 +292,23 @@ LOCK TABLES `producao_racao` WRITE;
 /*!40000 ALTER TABLE `producao_racao` DISABLE KEYS */;
 /*!40000 ALTER TABLE `producao_racao` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `atualizar_estoque_ingredientes` AFTER INSERT ON `producao_racao` FOR EACH ROW BEGIN
+    CALL atualizarEstoque(NEW.id, NEW.quantidade);
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `racoes`
@@ -309,15 +323,15 @@ CREATE TABLE `racoes` (
   `id_categoria` int NOT NULL,
   `tipo_racao` enum('Produção própria','Comprada','Ambos') NOT NULL,
   `fase_utilizada` int NOT NULL,
-  `batida` decimal(10,2) DEFAULT NULL,
+  `batida` decimal(10,2) DEFAULT '0.00',
   `estoque_minimo` decimal(10,2) NOT NULL,
-  `estoque_atual` decimal(10,2) DEFAULT NULL,
+  `estoque_atual` decimal(10,2) DEFAULT '0.00',
   PRIMARY KEY (`id`),
   KEY `id_categoria` (`id_categoria`),
   KEY `fase_utilizada` (`fase_utilizada`),
   CONSTRAINT `racoes_ibfk_1` FOREIGN KEY (`id_categoria`) REFERENCES `categorias` (`id`),
   CONSTRAINT `racoes_ibfk_2` FOREIGN KEY (`fase_utilizada`) REFERENCES `fases_granja` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -326,7 +340,6 @@ CREATE TABLE `racoes` (
 
 LOCK TABLES `racoes` WRITE;
 /*!40000 ALTER TABLE `racoes` DISABLE KEYS */;
-INSERT INTO `racoes` VALUES (1,'Thifanny, lesley, GORLOCK THE DESTROYER, ashley',1,'Produção própria',1,1000.00,1000.00,NULL),(2,'Thifanny, lesley, GORLOCK THE DESTROYER, ashley',1,'Comprada',1,NULL,1000.00,NULL);
 /*!40000 ALTER TABLE `racoes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -348,7 +361,7 @@ CREATE TABLE `registros` (
   KEY `id_acao` (`id_acao`),
   CONSTRAINT `registros_ibfk_1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `registros_ibfk_2` FOREIGN KEY (`id_acao`) REFERENCES `acoes` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -357,7 +370,6 @@ CREATE TABLE `registros` (
 
 LOCK TABLES `registros` WRITE;
 /*!40000 ALTER TABLE `registros` DISABLE KEYS */;
-INSERT INTO `registros` VALUES (1,'2023-10-03 16:06:43',1,1,'O usuário João cadastrou o ingrediente Sim'),(2,'2023-10-03 16:06:52',1,4,'O usuário João comprou 100000kg do ingrediente 1'),(3,'2023-10-03 16:09:00',1,1,'O usuário João cadastrou o ingrediente Sim'),(4,'2023-10-04 12:31:37',1,1,'O usuário João cadastrou o ingrediente Sim'),(5,'2023-10-04 21:21:35',1,5,'O usuário João cadastrou a ração Thifanny, lesley, GORLOCK THE DESTROYER, ashley'),(6,'2023-10-04 21:22:14',1,3,'O usuário João deletou o ingrediente 2'),(7,'2023-10-05 15:45:50',1,5,'O usuário João cadastrou a ração Thifanny, lesley, GORLOCK THE DESTROYER, ashley');
 /*!40000 ALTER TABLE `registros` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -388,13 +400,75 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'João','joao@gmail.com','$2b$10$urxJiJoWJFg5nSim7KWSwuMa7PwzaROO1v/1.5PvcJiqMuupmydAq','(14) 99458 - 4849','Ativo','Administrador',NULL,NULL);
+INSERT INTO `usuarios` VALUES (1,'Felipe Cardoso','felipe@gmail.com','$2b$10$9FwsLe4DqYynCCHgz4YHyuOFI8W843N3uFpKPXN0wpxe6g9q2vbQ.','(14) 1234 - 5678','Ativo','Administrador',NULL,NULL);
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
+-- Dumping events for database 'fabrica_racao'
+--
+
+--
 -- Dumping routines for database 'fabrica_racao'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `atualizarEstoque` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`%` PROCEDURE `atualizarEstoque`(IN id_producao INT, IN quantidade_produzida INT)
+BEGIN
+    DECLARE ingredientes_racao INT;
+    DECLARE id_ingrediente_update INT;
+    DECLARE index_loop INT;
+    DECLARE index_loop2 INT;
+    DECLARE id_racao_update INT;
+    DECLARE quantidade_ingrediente_batida DECIMAL(10, 2);
+    DECLARE quantidade_ingrediente DECIMAL(10, 2);
+    DECLARE quantidade_total DECIMAL(10, 2);
+    DECLARE novo_estoque DECIMAL(10, 2);
+    DECLARE estoque_agora DECIMAL(10, 2);
+    DECLARE cursor_ingredientes CURSOR FOR
+        SELECT id_ingrediente
+        FROM ingrediente_racao
+        WHERE id_racao = (SELECT id_racao FROM producao_racao WHERE id = id_producao);
+    
+    SELECT id_racao INTO id_racao_update FROM producao_racao WHERE id = id_producao;
+
+    -- Contar os ingredientes da ração
+    SELECT COUNT(*) INTO ingredientes_racao FROM ingrediente_racao WHERE id_racao = id_racao_update;
+
+    SELECT batida INTO quantidade_total FROM racoes WHERE id = id_racao_update;
+
+    SET index_loop = 1;
+
+    OPEN cursor_ingredientes;
+
+    WHILE index_loop <= ingredientes_racao DO
+
+        FETCH NEXT FROM cursor_ingredientes INTO id_ingrediente_update;
+        
+        SELECT quantidade INTO quantidade_ingrediente FROM ingrediente_racao WHERE id_racao = id_racao_update AND id_ingrediente = id_ingrediente_update LIMIT index_loop;
+
+        SET quantidade_ingrediente_batida = (quantidade_ingrediente / quantidade_total) * quantidade_produzida;
+		
+        SELECT estoque_atual INTO estoque_agora FROM ingredientes where id = id_ingrediente_update;
+        SET novo_estoque = (estoque_agora - quantidade_ingrediente_batida);
+        UPDATE ingredientes SET estoque_atual = novo_estoque WHERE id = id_ingrediente_update;
+        
+        SET index_loop = index_loop + 1;
+    END WHILE;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -405,4 +479,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-05 14:54:15
+-- Dump completed on 2023-10-25 10:35:17
