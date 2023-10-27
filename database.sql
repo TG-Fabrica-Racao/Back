@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 	id INT AUTO_INCREMENT,
     nome VARCHAR(50) NOT NULL,
     email VARCHAR(50) NOT NULL,
-    senha VARCHAR(100) NOT NULL,
+    senha VARCHAR(200) NOT NULL,
     telefone VARCHAR(20) NOT NULL,
     status_usuario ENUM ('Ativo', 'Inativo') NOT NULL,
     cargo ENUM ('Administrador', 'Funcionário') NOT NULL,

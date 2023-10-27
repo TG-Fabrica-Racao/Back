@@ -384,14 +384,14 @@ CREATE TABLE `usuarios` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nome` varchar(50) NOT NULL,
   `email` varchar(50) NOT NULL,
-  `senha` varchar(100) NOT NULL,
+  `senha` varchar(200) NOT NULL,
   `telefone` varchar(20) NOT NULL,
   `status_usuario` enum('Ativo','Inativo') NOT NULL,
   `cargo` enum('Administrador','Funcionário') NOT NULL,
   `passwordResetToken` varchar(100) DEFAULT NULL,
   `passwordResetExpires` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -400,7 +400,6 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'Felipe Cardoso','felipe@gmail.com','$2b$10$9FwsLe4DqYynCCHgz4YHyuOFI8W843N3uFpKPXN0wpxe6g9q2vbQ.','(14) 1234 - 5678','Ativo','Administrador',NULL,NULL);
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -479,4 +478,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-10-25 10:35:17
+-- Dump completed on 2023-10-26  8:18:08
