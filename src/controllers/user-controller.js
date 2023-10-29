@@ -134,21 +134,21 @@ module.exports = {
     userLogin: async (request, response) => {
         try {
             const { email, senha } = request.body;
-
+    
             const [result] = await mysql.execute('SELECT * FROM usuarios WHERE email = ?', [email]);
-
-            if (result.affectedRows === 0) {
+    
+            if (!result || result.length === 0) {
                 return response.status(404).json({ message: 'Usuário não encontrado' });
             }
-
+    
             const user = result[0];
-
+    
             const senha_valida = await bcrypt.compare(senha, user.senha);
-
+    
             if (!senha_valida) {
                 return response.status(401).json({ message: 'Usuário ou senha inválidos' });
             }
-
+    
             const token = jwt.sign({
                 id: user.id,
                 nome: user.nome,
@@ -159,7 +159,7 @@ module.exports = {
             }, process.env.JWT_KEY, {
                 expiresIn: '5 days'
             });
-
+    
             return response.status(200).json({ 
                 message: 'Autenticado com sucesso', 
                 token 
@@ -168,7 +168,7 @@ module.exports = {
             console.error('Erro ao efetuar login:', error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },
+    },    
 
     identifyUser: async (request, response) => {
         try {
