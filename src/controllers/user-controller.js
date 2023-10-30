@@ -94,13 +94,15 @@ module.exports = {
                 params.push(data_final);
             }
     
+            query += ' ORDER BY registros.data_registro DESC';
+    
             const [result] = await mysql.execute(query, params);
             return response.status(200).json(result);
         } catch (error) {
             console.error(error);
             return response.status(500).json({ message: 'Erro interno do servidor' });
         }
-    },               
+    },         
 
     createUser: async (request, response) => {
         try {
