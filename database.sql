@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS producao_racao (
 
 CREATE TABLE IF NOT EXISTS acerto_estoque (
     id INT AUTO_INCREMENT,
-    id_ingrediente INT,
+    -- id_ingrediente INT,
     id_racao INT,
     data_acerto DATETIME NOT NULL,
     id_usuario INT NOT NULL,
