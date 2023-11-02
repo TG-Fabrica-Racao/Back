@@ -253,41 +253,41 @@ module.exports = {
         }
     },
     
-    acertarEstoque: async (request, response) => {
-        try {
-            const token = request.header('Authorization');
-            const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
+    // acertarEstoque: async (request, response) => {
+    //     try {
+    //         const token = request.header('Authorization');
+    //         const decodedToken = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_KEY);
     
-            const id_usuario = decodedToken.id;
+    //         const id_usuario = decodedToken.id;
     
-            const { id_ingrediente, quantidade } = request.body;
+    //         const { id_ingrediente, quantidade } = request.body;
     
-            const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [id_ingrediente]);
+    //         const [ingrediente] = await mysql.execute('SELECT * FROM ingredientes WHERE id = ?', [id_ingrediente]);
     
-            if (!ingrediente) {
-                return response.status(404).json({ message: 'Ingrediente não encontrado' });
-            }
+    //         if (!ingrediente) {
+    //             return response.status(404).json({ message: 'Ingrediente não encontrado' });
+    //         }
     
-            if (ingrediente[0].estoque_atual < quantidade) {
-                return response.status(400).json({ message: 'Estoque insuficiente' });
-            }
+    //         if (ingrediente[0].estoque_atual < quantidade) {
+    //             return response.status(400).json({ message: 'Estoque insuficiente' });
+    //         }
     
-            const query = `
-                INSERT INTO acerto_estoque
-                    (id_ingrediente, data_acerto, id_usuario, quantidade)
-                VALUES
-                    (?, NOW(), ?, ?)
-            `;
+    //         const query = `
+    //             INSERT INTO acerto_estoque
+    //                 (id_ingrediente, data_acerto, id_usuario, quantidade)
+    //             VALUES
+    //                 (?, NOW(), ?, ?)
+    //         `;
     
-            const [result] = await mysql.execute(query, [id_ingrediente, id_usuario, quantidade]);
-            await mysql.execute('UPDATE ingredientes SET estoque_atual = (estoque_atual - ?) WHERE id = ?', [quantidade, id_ingrediente]);
-            await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 5, `Acerto de estoque de ${quantidade}kg do ingrediente ${ingrediente[0].nome}`]);
-            return response.status(201).json({ message: 'Acerto de estoque realizado com sucesso!', id: result.insertId });
-        } catch (error) {
-            console.error(error);
-            return response.status(500).json({ message: 'Erro interno do servidor' });
-        }
-    },
+    //         const [result] = await mysql.execute(query, [id_ingrediente, id_usuario, quantidade]);
+    //         await mysql.execute('UPDATE ingredientes SET estoque_atual = (estoque_atual - ?) WHERE id = ?', [quantidade, id_ingrediente]);
+    //         await mysql.execute('INSERT INTO registros (data_registro, id_usuario, id_acao, descricao) VALUES (NOW(), ?, ?, ?)', [decodedToken.id, 5, `Acerto de estoque de ${quantidade}kg do ingrediente ${ingrediente[0].nome}`]);
+    //         return response.status(201).json({ message: 'Acerto de estoque realizado com sucesso!', id: result.insertId });
+    //     } catch (error) {
+    //         console.error(error);
+    //         return response.status(500).json({ message: 'Erro interno do servidor' });
+    //     }
+    // },
         
     deleteIngrediente: async (request, response) => {
         try {
