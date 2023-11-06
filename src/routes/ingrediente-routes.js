@@ -61,12 +61,12 @@ router.post('/comprar', login.verifyToken, roles.adminRole, celebrate({
     })
 }), ingredienteController.comprarIngrediente);
 
-router.post('/acertar-estoque', login.verifyToken, celebrate({
-    [Segments.BODY]: Joi.object().keys({
-        id_ingrediente: Joi.number().integer().min(1).required(),
-        quantidade: Joi.number().integer().min(1).required()
-    })
-}), ingredienteController.acertarEstoque);
+// router.post('/acertar-estoque', login.verifyToken, celebrate({
+//     [Segments.BODY]: Joi.object().keys({
+//         id_ingrediente: Joi.number().integer().min(1).required(),
+//         quantidade: Joi.number().integer().min(1).required()
+//     })
+// }), ingredienteController.acertarEstoque);
 
 router.delete('/delete/:id', login.verifyToken, celebrate({
     [Segments.PARAMS]: Joi.object({
