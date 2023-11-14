@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS acerto_estoque (
     quantidade DECIMAL(10, 2) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (id_racao) REFERENCES racoes (id),
-    FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id),
+    -- FOREIGN KEY (id_ingrediente) REFERENCES ingredientes (id),
     FOREIGN KEY (id_usuario) REFERENCES usuarios (id)
 );
 
